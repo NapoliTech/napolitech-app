@@ -129,28 +129,6 @@ export default function OrderSuccessScreen() {
             Estamos preparando seu pedido com muito carinho!
           </Text>
         </View>
-
-        <View style={styles.statusPreview}>
-          <View style={styles.statusItem}>
-            <View style={[styles.statusDot, styles.statusDotActive]} />
-            <Text style={styles.statusText}>Pedido recebido</Text>
-          </View>
-          <View style={styles.statusLine} />
-          <View style={styles.statusItem}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusTextInactive}>Em preparo</Text>
-          </View>
-          <View style={styles.statusLine} />
-          <View style={styles.statusItem}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusTextInactive}>Saiu para entrega</Text>
-          </View>
-          <View style={styles.statusLine} />
-          <View style={styles.statusItem}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusTextInactive}>Entregue</Text>
-          </View>
-        </View>
       </Animated.View>
 
       {/* Botoes */}
@@ -257,11 +235,11 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.successLight || '#E8F5E9',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     width: '100%',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   infoIcon: {
     fontSize: 24,
@@ -270,47 +248,8 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: colors.primary,
+    color: colors.success || '#2E7D32',
     fontWeight: '500',
-  },
-  statusPreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  statusItem: {
-    alignItems: 'center',
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.border,
-    marginBottom: spacing.xs,
-  },
-  statusDotActive: {
-    backgroundColor: colors.success,
-  },
-  statusLine: {
-    width: 30,
-    height: 2,
-    backgroundColor: colors.border,
-    marginHorizontal: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  statusText: {
-    fontSize: 10,
-    color: colors.success,
-    fontWeight: '600',
-    maxWidth: 60,
-    textAlign: 'center',
-  },
-  statusTextInactive: {
-    fontSize: 10,
-    color: colors.textMuted,
-    maxWidth: 60,
-    textAlign: 'center',
   },
   buttons: {
     width: '100%',

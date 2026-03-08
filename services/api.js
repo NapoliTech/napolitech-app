@@ -2,7 +2,32 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuracao do backend
-const API_BASE_URL = 'http://localhost:8080/api';
+// Use o IP da sua maquina na rede local (encontre com ipconfig no Windows)
+const API_BASE_URL = 'http://192.168.0.154:8080/api';
+
+// Helper para extrair nome do produto (pode ser objeto ou array)
+const extrairNomeProduto = (item) => {
+  // Se produto for um array de objetos (meio-a-meio)
+  if (Array.isArray(item.produto)) {
+    const nomes = item.produto
+      .map(p => p?.nome || p?.name)
+      .filter(Boolean);
+    if (nomes.length > 1) {
+      return `1/2 ${nomes[0]} + 1/2 ${nomes[1]}`;
+    }
+    if (nomes.length === 1) {
+      return nomes[0];
+    }
+  }
+
+  // Se produto for um objeto
+  if (item.produto && typeof item.produto === 'object') {
+    return item.produto.nome || item.produto.name;
+  }
+
+  // Fallbacks
+  return item.nomeProduto || item.nome || 'Produto';
+};
 
 // Helper para fazer requisicoes
 const request = async (endpoint, options = {}) => {
@@ -403,8 +428,18 @@ export const orderService = {
   // Buscar pedidos do usuario
   async getOrders() {
     try {
-      const response = await request('/pedidos?page=0&size=50&sort=id,DESC');
-      const pedidos = response.content || [];
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      const clienteId = user.idUsuario || user.id;
+
+      if (!clienteId) {
+        console.error('Usuario nao encontrado para buscar pedidos');
+        return { success: false, error: 'Usuario nao logado', data: [] };
+      }
+
+      // Busca usuario por ID - retorna pedidosRealizados
+      const response = await request(`/${clienteId}`);
+      const pedidos = response.pedidosRealizados || [];
 
       return {
         success: true,
@@ -413,7 +448,14 @@ export const orderService = {
           status: p.statusPedido,
           total: p.precoTotal,
           date: p.dataPedido,
-          items: p.itens || [],
+          items: (p.itens || []).map(item => ({
+            id: item.id,
+            quantidade: item.quantidade,
+            nomeProduto: extrairNomeProduto(item),
+            preco: item.produto?.preco || item.preco,
+            tamanhoPizza: item.tamanhoPizza,
+            bordaRecheada: item.bordaRecheada,
+          })),
         })),
       };
     } catch (error) {
@@ -426,7 +468,21 @@ export const orderService = {
   async getOrderById(orderId) {
     try {
       const response = await request(`/pedidos/${orderId}`);
-      return { success: true, data: response };
+
+      // Mapeia os itens para incluir nomeProduto
+      const mappedData = {
+        ...response,
+        itens: (response.itens || []).map(item => ({
+          id: item.id,
+          quantidade: item.quantidade,
+          nomeProduto: extrairNomeProduto(item),
+          preco: item.produto?.preco || item.preco,
+          tamanhoPizza: item.tamanhoPizza,
+          bordaRecheada: item.bordaRecheada,
+        })),
+      };
+
+      return { success: true, data: mappedData };
     } catch (error) {
       console.error('Get order by ID error:', error);
       return { success: false, error: error.message };
