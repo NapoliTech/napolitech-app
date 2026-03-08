@@ -137,14 +137,14 @@ export default function LoginScreen() {
           </Link>
         </View>
 
-        {/* Demo Credentials */}
+        {/* Info Card */}
         <View style={styles.demoCard}>
           <View style={styles.demoHeader}>
-            <Text style={styles.demoIcon}>💡</Text>
-            <Text style={styles.demoTitle}>Credenciais de teste</Text>
+            <Text style={styles.demoIcon}>🔌</Text>
+            <Text style={styles.demoTitle}>Backend conectado</Text>
           </View>
-          <Text style={styles.demoText}>Email: joao@email.com</Text>
-          <Text style={styles.demoText}>Senha: 123456</Text>
+          <Text style={styles.demoText}>API: http://localhost:8080</Text>
+          <Text style={styles.demoText}>Use suas credenciais cadastradas</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

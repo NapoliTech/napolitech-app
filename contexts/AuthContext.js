@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authService } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -6,7 +6,28 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Restaurar sessao ao iniciar o app
+  useEffect(() => {
+    restoreSession();
+  }, []);
+
+  const restoreSession = async () => {
+    try {
+      const result = await authService.restoreSession();
+      if (result.success) {
+        setUser(result.user);
+        setToken(result.token);
+      }
+    } catch (error) {
+      console.error('Erro ao restaurar sessao:', error);
+    } finally {
+      setIsLoading(false);
+      setIsInitialized(true);
+    }
+  };
 
   const login = useCallback(async (email, password) => {
     setIsLoading(true);
@@ -16,9 +37,6 @@ export function AuthProvider({ children }) {
       if (response.success) {
         setUser(response.user);
         setToken(response.token);
-        // TODO: Salvar token no AsyncStorage para persistência
-        // await AsyncStorage.setItem('token', response.token);
-        // await AsyncStorage.setItem('user', JSON.stringify(response.user));
       }
 
       return response;
@@ -37,7 +55,6 @@ export function AuthProvider({ children }) {
       if (response.success) {
         setUser(response.user);
         setToken(response.token);
-        // TODO: Salvar token no AsyncStorage para persistência
       }
 
       return response;
@@ -54,22 +71,28 @@ export function AuthProvider({ children }) {
       await authService.logout();
       setUser(null);
       setToken(null);
-      // TODO: Limpar AsyncStorage
-      // await AsyncStorage.removeItem('token');
-      // await AsyncStorage.removeItem('user');
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  const updateUser = useCallback((updatedUserData) => {
+    setUser(prev => ({
+      ...prev,
+      ...updatedUserData,
+    }));
   }, []);
 
   const value = {
     user,
     token,
     isLoading,
+    isInitialized,
     isAuthenticated: !!user,
     login,
     register,
     logout,
+    updateUser,
   };
 
   return (

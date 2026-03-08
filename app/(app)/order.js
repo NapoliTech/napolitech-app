@@ -8,12 +8,11 @@ import {
   Alert,
   Modal,
   FlatList,
-  Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
-import { productService, orderService } from '../../services/api';
-import { colors, spacing, borderRadius, shadows } from '../../constants/theme';
+import { productService } from '../../services/api';
+import { colors, spacing, borderRadius } from '../../constants/theme';
 
 export default function OrderScreen() {
   const { user, logout } = useAuth();
@@ -122,14 +121,14 @@ export default function OrderScreen() {
     ]);
   };
 
-  const handleFinishOrder = async () => {
+  const handleContinueOrder = () => {
     if (!selectedFlavor1) {
       Alert.alert('Selecione um sabor', 'Escolha pelo menos um sabor de pizza.');
       return;
     }
 
+    // Monta os dados do pedido para passar para o checkout
     const orderData = {
-      userId: user.id,
       pizza: {
         size: selectedSize,
         flavor1: selectedFlavor1,
@@ -140,31 +139,18 @@ export default function OrderScreen() {
       total: calculateTotal(),
     };
 
-    const result = await orderService.createOrder(orderData);
-
-    if (result.success) {
-      Alert.alert(
-        'Pedido confirmado! 🎉',
-        `Pedido #${result.order.id}\n\nTotal: R$ ${calculateTotal().toFixed(2)}\n\nAcompanhe pelo app!`,
-        [
-          {
-            text: 'Novo pedido',
-            onPress: () => {
-              setSelectedFlavor1(null);
-              setSelectedFlavor2(null);
-              setSelectedDrinks([]);
-            },
-          },
-        ]
-      );
-    }
+    // Navega para o checkout passando os dados
+    router.push({
+      pathname: '/(app)/checkout',
+      params: { orderData: JSON.stringify(orderData) },
+    });
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingEmoji}>🍕</Text>
-        <Text style={styles.loadingText}>Carregando cardápio...</Text>
+        <Text style={styles.loadingText}>Carregando cardapio...</Text>
       </View>
     );
   }
@@ -175,7 +161,7 @@ export default function OrderScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Olá, {user?.name?.split(' ')[0]}! 👋</Text>
+            <Text style={styles.greeting}>Ola, {user?.name?.split(' ')[0]}!</Text>
             <Text style={styles.headerSubtitle}>O que vai pedir hoje?</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
@@ -206,7 +192,7 @@ export default function OrderScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.sizeEmoji}>
-                    {size.id === 'small' ? '🍕' : size.id === 'medium' ? '🍕🍕' : size.id === 'large' ? '🍕🍕🍕' : '🍕🍕🍕🍕'}
+                    {size.id === 'BROTO' ? '🍕' : size.id === 'GRANDE' ? '🍕🍕' : size.id === 'TREM' ? '🍕🍕🍕' : '🍕🍕'}
                   </Text>
                   <Text style={[
                     styles.sizeName,
@@ -240,7 +226,7 @@ export default function OrderScreen() {
           >
             <View style={styles.flavorCardContent}>
               <View style={styles.flavorBadge}>
-                <Text style={styles.flavorBadgeText}>1ª</Text>
+                <Text style={styles.flavorBadgeText}>1</Text>
               </View>
               <View style={styles.flavorInfo}>
                 <Text style={styles.flavorLabel}>Primeira metade</Text>
@@ -264,7 +250,7 @@ export default function OrderScreen() {
           >
             <View style={styles.flavorCardContent}>
               <View style={[styles.flavorBadge, styles.flavorBadgeSecondary]}>
-                <Text style={styles.flavorBadgeText}>2ª</Text>
+                <Text style={styles.flavorBadgeText}>2</Text>
               </View>
               <View style={styles.flavorInfo}>
                 <Text style={styles.flavorLabel}>Segunda metade (opcional)</Text>
@@ -286,7 +272,7 @@ export default function OrderScreen() {
               style={styles.removeButton}
               onPress={() => setSelectedFlavor2(null)}
             >
-              <Text style={styles.removeButtonText}>✕ Remover 2ª metade</Text>
+              <Text style={styles.removeButtonText}>x Remover 2a metade</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -320,7 +306,7 @@ export default function OrderScreen() {
                   style={styles.quantityButton}
                   onPress={() => updateDrinkQuantity(drink.id, -1)}
                 >
-                  <Text style={styles.quantityButtonText}>−</Text>
+                  <Text style={styles.quantityButtonText}>-</Text>
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{drink.quantity}</Text>
                 <TouchableOpacity
@@ -350,7 +336,7 @@ export default function OrderScreen() {
                   </Text>
                   <Text style={styles.summaryItemDetail}>
                     {selectedFlavor2
-                      ? `½ ${selectedFlavor1.name} + ½ ${selectedFlavor2.name}`
+                      ? `1/2 ${selectedFlavor1.name} + 1/2 ${selectedFlavor2.name}`
                       : selectedFlavor1.name}
                   </Text>
                 </View>
@@ -395,11 +381,11 @@ export default function OrderScreen() {
           </View>
           <TouchableOpacity
             style={[styles.orderButton, !selectedFlavor1 && styles.orderButtonDisabled]}
-            onPress={handleFinishOrder}
+            onPress={handleContinueOrder}
             disabled={!selectedFlavor1}
             activeOpacity={0.8}
           >
-            <Text style={styles.orderButtonText}>Finalizar pedido</Text>
+            <Text style={styles.orderButtonText}>Continuar compra</Text>
             <Text style={styles.orderButtonIcon}>→</Text>
           </TouchableOpacity>
         </View>
@@ -428,7 +414,7 @@ export default function OrderScreen() {
                 style={styles.modalClose}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.modalCloseText}>✕</Text>
+                <Text style={styles.modalCloseText}>x</Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -548,11 +534,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: colors.border,
-    ...shadows.sm,
   },
   sizeCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.surface,
   },
   sizeEmoji: {
     fontSize: 14,
@@ -597,7 +581,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    ...shadows.sm,
   },
   flavorCardSelected: {
     borderColor: colors.primary,
@@ -690,7 +673,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    ...shadows.sm,
   },
   drinkInfo: {
     flex: 1,
@@ -746,7 +728,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    ...shadows.md,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -804,7 +785,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
-    ...shadows.lg,
   },
   bottomBarContent: {
     flexDirection: 'row',
@@ -827,7 +807,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.md,
-    ...shadows.sm,
   },
   orderButtonDisabled: {
     backgroundColor: colors.textMuted,

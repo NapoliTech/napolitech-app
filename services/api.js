@@ -1,118 +1,313 @@
-// API Service - substitua as funções mock por chamadas reais ao backend
-import { PIZZA_FLAVORS, DRINKS, PIZZA_SIZES, MOCK_USERS } from './mockData';
+// API Service - conectado ao backend real
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configuração base da API - configure seu backend aqui
-const API_BASE_URL = 'http://localhost:3000/api'; // Altere para sua URL
+// Configuracao do backend
+const API_BASE_URL = 'http://localhost:8080/api';
 
-// Simula delay de rede
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// Helper para fazer requisicoes
+const request = async (endpoint, options = {}) => {
+  const token = await AsyncStorage.getItem('token');
+
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+  // Login retorna apenas o token como texto
+  if (endpoint === '/login' && response.ok) {
+    const tokenText = await response.text();
+    return { ok: true, token: tokenText };
+  }
+
+  // Verifica se a resposta tem conteudo
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!response.ok) {
+    throw new Error(data.mensagem || data.erro || 'Erro na requisicao');
+  }
+
+  return data;
+};
 
 // ========== AUTH ==========
 
 export const authService = {
   // Login
   async login(email, password) {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/auth/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password }),
-    // }).then(res => res.json());
+    try {
+      const result = await request('/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, senha: password }),
+      });
 
-    await delay(800); // Simula latência
+      if (result.token) {
+        // Salva o token
+        await AsyncStorage.setItem('token', result.token);
 
-    const user = MOCK_USERS.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
+        // Busca dados do usuario pelo email
+        const userResponse = await request(`/email/${encodeURIComponent(email)}`);
 
-    if (user) {
-      const { password: _, ...userWithoutPassword } = user;
+        const user = userResponse.usuario || userResponse;
+
+        // Salva dados do usuario
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+
+        return {
+          success: true,
+          user: {
+            id: user.idUsuario || user.id,
+            name: user.nome,
+            email: user.email,
+            phone: user.telefone,
+            cpf: user.cpf,
+          },
+          token: result.token,
+        };
+      }
+
+      return { success: false, error: 'Falha na autenticacao' };
+    } catch (error) {
+      console.error('Login error:', error);
       return {
-        success: true,
-        user: userWithoutPassword,
-        token: 'mock-jwt-token-' + user.id,
+        success: false,
+        error: error.message || 'Email ou senha invalidos',
       };
     }
-
-    return {
-      success: false,
-      error: 'Email ou senha inválidos',
-    };
   },
 
   // Cadastro
   async register(userData) {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/auth/register`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(userData),
-    // }).then(res => res.json());
+    try {
+      // Formata a data de nascimento (usando data fixa por enquanto pois nao temos campo no form)
+      const dataFormatada = userData.dataNasc || '01/01/2000';
 
-    await delay(800);
+      const response = await request('/cadastro', {
+        method: 'POST',
+        body: JSON.stringify({
+          nome: userData.name,
+          email: userData.email,
+          dataNasc: dataFormatada,
+          cpf: userData.cpf || '000.000.000-00', // CPF placeholder - precisa adicionar no form
+          senha: userData.password,
+          confirmarSenha: userData.password,
+          telefone: userData.phone,
+        }),
+      });
 
-    const existingUser = MOCK_USERS.find(
-      u => u.email.toLowerCase() === userData.email.toLowerCase()
-    );
+      if (response.usuario) {
+        // Faz login automatico apos cadastro
+        return await this.login(userData.email, userData.password);
+      }
 
-    if (existingUser) {
+      return {
+        success: true,
+        message: response.mensagem,
+      };
+    } catch (error) {
+      console.error('Register error:', error);
       return {
         success: false,
-        error: 'Este email já está cadastrado',
+        error: error.message || 'Erro ao cadastrar usuario',
       };
     }
-
-    const newUser = {
-      id: MOCK_USERS.length + 1,
-      ...userData,
-    };
-
-    MOCK_USERS.push(newUser);
-
-    const { password: _, ...userWithoutPassword } = newUser;
-    return {
-      success: true,
-      user: userWithoutPassword,
-      token: 'mock-jwt-token-' + newUser.id,
-    };
   },
 
   // Logout
   async logout() {
-    // TODO: Substituir por chamada real se necessário
-    await delay(300);
-    return { success: true };
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      return { success: true };
+    } catch (error) {
+      console.error('Logout error:', error);
+      return { success: false };
+    }
+  },
+
+  // Restaurar sessao
+  async restoreSession() {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const userJson = await AsyncStorage.getItem('user');
+
+      if (token && userJson) {
+        const userData = JSON.parse(userJson);
+        return {
+          success: true,
+          user: {
+            id: userData.idUsuario || userData.id,
+            name: userData.nome,
+            email: userData.email,
+            phone: userData.telefone,
+            cpf: userData.cpf,
+          },
+          token,
+        };
+      }
+
+      return { success: false };
+    } catch (error) {
+      console.error('Restore session error:', error);
+      return { success: false };
+    }
   },
 };
 
 // ========== PRODUTOS ==========
 
 export const productService = {
-  // Buscar sabores de pizza
+  // Buscar todos os produtos
+  async getProducts(page = 0, size = 100) {
+    try {
+      const response = await request(`/produtos?page=${page}&size=${size}`);
+      return { success: true, data: response };
+    } catch (error) {
+      console.error('Get products error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Buscar produtos por categoria
+  async getProductsByCategory(category) {
+    try {
+      const response = await request(`/produtos?page=0&size=100`);
+      const products = response.content || [];
+      const filtered = products.filter(p => p.categoriaProduto === category);
+      return { success: true, data: filtered };
+    } catch (error) {
+      console.error('Get products by category error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Buscar sabores de pizza (produtos da categoria PIZZA)
   async getFlavors() {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/pizzas/flavors`).then(res => res.json());
+    try {
+      const response = await request('/produtos?page=0&size=100');
+      const products = response.content || [];
 
-    await delay(500);
-    return { success: true, data: PIZZA_FLAVORS };
+      // Filtra pizzas e mapeia para o formato esperado pelo frontend
+      const pizzas = products
+        .filter(p => p.categoriaProduto === 'PIZZA')
+        .map(p => ({
+          id: p.id,
+          name: p.nome,
+          price: p.preco,
+          description: p.ingredientes,
+        }));
+
+      return { success: true, data: pizzas };
+    } catch (error) {
+      console.error('Get flavors error:', error);
+      return { success: false, error: error.message, data: [] };
+    }
   },
 
-  // Buscar tamanhos de pizza
+  // Buscar tamanhos de pizza (valores fixos - backend nao tem endpoint para isso)
   async getSizes() {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/pizzas/sizes`).then(res => res.json());
-
-    await delay(300);
-    return { success: true, data: PIZZA_SIZES };
+    // Tamanhos baseados na documentacao do backend
+    const sizes = [
+      { id: 'BROTO', name: 'Broto', slices: 2, multiplier: 0.6 },
+      { id: 'GRANDE', name: 'Grande', slices: 8, multiplier: 1.0 },
+      { id: 'TREM', name: 'Trem', slices: 16, multiplier: 1.8 },
+      { id: 'MEIO_A_MEIO', name: 'Meio a Meio', slices: 8, multiplier: 1.0 },
+    ];
+    return { success: true, data: sizes };
   },
 
-  // Buscar bebidas
+  // Buscar bebidas (produtos da categoria BEBIDAS)
   async getDrinks() {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/drinks`).then(res => res.json());
+    try {
+      const response = await request('/produtos?page=0&size=100');
+      const products = response.content || [];
 
-    await delay(400);
-    return { success: true, data: DRINKS };
+      // Filtra bebidas e mapeia para o formato esperado pelo frontend
+      const drinks = products
+        .filter(p => p.categoriaProduto === 'BEBIDAS')
+        .map(p => ({
+          id: p.id,
+          name: p.nome,
+          price: p.preco,
+        }));
+
+      return { success: true, data: drinks };
+    } catch (error) {
+      console.error('Get drinks error:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Buscar porcoes
+  async getPorcoes() {
+    try {
+      const response = await request('/produtos?page=0&size=100');
+      const products = response.content || [];
+
+      const porcoes = products
+        .filter(p => p.categoriaProduto === 'PORCAO')
+        .map(p => ({
+          id: p.id,
+          name: p.nome,
+          price: p.preco,
+          description: p.ingredientes,
+        }));
+
+      return { success: true, data: porcoes };
+    } catch (error) {
+      console.error('Get porcoes error:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Buscar sobremesas
+  async getSobremesas() {
+    try {
+      const response = await request('/produtos?page=0&size=100');
+      const products = response.content || [];
+
+      const sobremesas = products
+        .filter(p => p.categoriaProduto === 'SOBREMESA' || p.categoriaProduto === 'PIZZA_DOCE')
+        .map(p => ({
+          id: p.id,
+          name: p.nome,
+          price: p.preco,
+          description: p.ingredientes,
+        }));
+
+      return { success: true, data: sobremesas };
+    } catch (error) {
+      console.error('Get sobremesas error:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Buscar esfihas
+  async getEsfihas() {
+    try {
+      const response = await request('/produtos?page=0&size=100');
+      const products = response.content || [];
+
+      const esfihas = products
+        .filter(p => p.categoriaProduto === 'ESFIHA' || p.categoriaProduto === 'ESFIHA_DOCE')
+        .map(p => ({
+          id: p.id,
+          name: p.nome,
+          price: p.preco,
+          description: p.ingredientes,
+        }));
+
+      return { success: true, data: esfihas };
+    } catch (error) {
+      console.error('Get esfihas error:', error);
+      return { success: false, error: error.message, data: [] };
+    }
   },
 };
 
@@ -121,44 +316,325 @@ export const productService = {
 export const orderService = {
   // Criar pedido
   async createOrder(orderData) {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/orders`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}`,
-    //   },
-    //   body: JSON.stringify(orderData),
-    // }).then(res => res.json());
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      console.log('User from storage:', userJson);
 
-    await delay(1000);
+      const user = userJson ? JSON.parse(userJson) : {};
 
-    return {
-      success: true,
-      order: {
-        id: Date.now(),
-        ...orderData,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      },
-    };
+      // Verifica se tem usuario logado
+      if (!user.idUsuario && !user.id) {
+        console.error('Usuario nao encontrado no storage');
+        return {
+          success: false,
+          error: 'Usuario nao esta logado. Faca login novamente.',
+        };
+      }
+
+      const clienteId = user.idUsuario || user.id;
+
+      // Monta os itens do pedido
+      const itens = [];
+
+      // Adiciona pizza
+      if (orderData.pizza && orderData.pizza.flavor1) {
+        const produtoIds = [orderData.pizza.flavor1.id];
+        if (orderData.pizza.flavor2) {
+          produtoIds.push(orderData.pizza.flavor2.id);
+        }
+
+        itens.push({
+          produto: produtoIds,
+          quantidade: 1,
+          tamanhoPizza: orderData.pizza.size?.id || 'GRANDE',
+          bordaRecheada: orderData.bordaRecheada || 'NORMAL',
+        });
+      }
+
+      // Adiciona bebidas
+      if (orderData.drinks && orderData.drinks.length > 0) {
+        orderData.drinks.forEach(drink => {
+          itens.push({
+            produto: [drink.id],
+            quantidade: drink.quantity,
+            tamanhoPizza: 'GRANDE',
+            bordaRecheada: 'NORMAL',
+          });
+        });
+      }
+
+      const pedidoData = {
+        clienteId: clienteId,
+        nomeCliente: user.nome || orderData.nomeCliente,
+        valorTotal: orderData.total,
+        enderecoId: orderData.enderecoId || null,
+        telefone: user.telefone || orderData.telefone,
+        observacao: orderData.observacao || '',
+        statusPedido: 'RECEBIDO',
+        tipoEntrega: orderData.tipoEntrega || 'RETIRADA',
+        bordaRecheada: orderData.bordaRecheada || 'NORMAL',
+        dataPedido: new Date().toISOString(),
+        itens,
+      };
+
+      console.log('Pedido data:', JSON.stringify(pedidoData, null, 2));
+
+      const response = await request('/pedidos', {
+        method: 'POST',
+        body: JSON.stringify(pedidoData),
+      });
+
+      return {
+        success: true,
+        order: {
+          id: response.pedidoId,
+          ...response,
+        },
+      };
+    } catch (error) {
+      console.error('Create order error:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro ao criar pedido',
+      };
+    }
   },
 
-  // Buscar histórico de pedidos
-  async getOrders(userId) {
-    // TODO: Substituir por chamada real
-    // return fetch(`${API_BASE_URL}/orders/user/${userId}`, {
-    //   headers: { 'Authorization': `Bearer ${token}` },
-    // }).then(res => res.json());
+  // Buscar pedidos do usuario
+  async getOrders() {
+    try {
+      const response = await request('/pedidos?page=0&size=50&sort=id,DESC');
+      const pedidos = response.content || [];
 
-    await delay(600);
-    return { success: true, data: [] };
+      return {
+        success: true,
+        data: pedidos.map(p => ({
+          id: p.id,
+          status: p.statusPedido,
+          total: p.precoTotal,
+          date: p.dataPedido,
+          items: p.itens || [],
+        })),
+      };
+    } catch (error) {
+      console.error('Get orders error:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Buscar pedido por ID
+  async getOrderById(orderId) {
+    try {
+      const response = await request(`/pedidos/${orderId}`);
+      return { success: true, data: response };
+    } catch (error) {
+      console.error('Get order by ID error:', error);
+      return { success: false, error: error.message };
+    }
   },
 };
 
-// Exporta tudo junto também para facilitar
+// ========== USUARIO ==========
+
+export const userService = {
+  // Buscar dados do usuario
+  async getProfile() {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+
+      if (!user.email) {
+        return { success: false, error: 'Usuario nao logado' };
+      }
+
+      const response = await request(`/email/${encodeURIComponent(user.email)}`);
+      const userData = response.usuario || response;
+
+      return {
+        success: true,
+        user: {
+          id: userData.idUsuario || userData.id,
+          name: userData.nome,
+          email: userData.email,
+          phone: userData.telefone,
+          cpf: userData.cpf,
+        },
+      };
+    } catch (error) {
+      console.error('Get profile error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Atualizar perfil do usuario
+  async updateProfile(profileData) {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      const userId = user.idUsuario || user.id;
+
+      if (!userId) {
+        return { success: false, error: 'Usuario nao logado' };
+      }
+
+      const response = await request(`/usuarios/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          nome: profileData.nome,
+          telefone: profileData.telefone,
+        }),
+      });
+
+      // Atualiza dados locais
+      const updatedUser = {
+        ...user,
+        nome: profileData.nome || user.nome,
+        telefone: profileData.telefone || user.telefone,
+      };
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+
+      return {
+        success: true,
+        user: {
+          id: updatedUser.idUsuario || updatedUser.id,
+          name: updatedUser.nome,
+          email: updatedUser.email,
+          phone: updatedUser.telefone,
+          cpf: updatedUser.cpf,
+        },
+      };
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Excluir conta do usuario
+  async deleteAccount() {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      const userId = user.idUsuario || user.id;
+
+      if (!userId) {
+        return { success: false, error: 'Usuario nao logado' };
+      }
+
+      await request(`/usuarios/${userId}`, {
+        method: 'DELETE',
+      });
+
+      // Limpa dados locais
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+
+      return { success: true };
+    } catch (error) {
+      console.error('Delete account error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+};
+
+// ========== ENDERECOS ==========
+
+export const addressService = {
+  // Cadastrar endereco
+  async createAddress(addressData) {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      const usuarioId = user.idUsuario || user.id;
+
+      if (!usuarioId) {
+        return {
+          success: false,
+          error: 'Usuario nao esta logado.',
+        };
+      }
+
+      console.log('Cadastrando endereco para usuario:', usuarioId);
+
+      const response = await request('/enderecos', {
+        method: 'POST',
+        body: JSON.stringify({
+          rua: addressData.rua,
+          bairro: addressData.bairro,
+          numero: parseInt(addressData.numero),
+          complemento: addressData.complemento || '',
+          cidade: addressData.cidade,
+          estado: addressData.estado,
+          cep: addressData.cep,
+          usuarioId: usuarioId,
+        }),
+      });
+
+      console.log('Endereco criado:', response);
+
+      return {
+        success: true,
+        address: {
+          id: response.enderecoId,
+          rua: response.rua,
+          numero: response.numero,
+          bairro: response.bairro,
+          complemento: response.complemento,
+          cidade: response.cidade,
+          estado: response.estado,
+          cep: response.cep,
+        },
+      };
+    } catch (error) {
+      console.error('Create address error:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro ao cadastrar endereco',
+      };
+    }
+  },
+
+  // Buscar enderecos do usuario
+  async getAddresses() {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+
+      if (!user.email) {
+        return { success: true, data: [] };
+      }
+
+      const response = await request(`/enderecos/email/${encodeURIComponent(user.email)}`);
+
+      const endereco = response.endereco;
+      if (endereco) {
+        return {
+          success: true,
+          data: [{
+            id: endereco.id,
+            rua: endereco.rua,
+            numero: endereco.numero,
+            bairro: endereco.bairro,
+            complemento: endereco.complemento,
+            cidade: endereco.cidade,
+            estado: endereco.estado,
+            cep: endereco.cep,
+          }],
+        };
+      }
+
+      return { success: true, data: [] };
+    } catch (error) {
+      console.error('Get addresses error:', error);
+      return { success: true, data: [] };
+    }
+  },
+};
+
+// Exporta tudo junto tambem para facilitar
 export default {
   auth: authService,
   products: productService,
   orders: orderService,
+  addresses: addressService,
+  user: userService,
 };
