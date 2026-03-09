@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Use o IP da sua maquina na rede local (encontre com ipconfig no Windows)
 const API_BASE_URL = 'http://192.168.0.154:8080/api';
 
-// Helper para extrair nome do produto (pode ser objeto ou array)
 const extrairNomeProduto = (item) => {
   // Se produto for um array de objetos (meio-a-meio)
   if (Array.isArray(item.produto)) {
@@ -45,17 +44,34 @@ const request = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
   // Login retorna apenas o token como texto
-  if (endpoint === '/login' && response.ok) {
+  if (endpoint === '/login') {
     const tokenText = await response.text();
-    return { ok: true, token: tokenText };
+    if (response.ok) {
+      return { ok: true, token: tokenText };
+    }
+    throw new Error(tokenText || 'Email ou senha invalidos');
   }
 
   // Verifica se a resposta tem conteudo
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+
+  // Tenta parsear como JSON
+  let data = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      // Se nao for JSON valido, usa o texto como mensagem de erro
+      if (!response.ok) {
+        throw new Error(text.substring(0, 100) || 'Erro na requisicao');
+      }
+      // Se for sucesso mas nao JSON, retorna texto
+      return { text };
+    }
+  }
 
   if (!response.ok) {
-    throw new Error(data.mensagem || data.erro || 'Erro na requisicao');
+    throw new Error(data.mensagem || data.erro || data.message || 'Erro na requisicao');
   }
 
   return data;
@@ -686,6 +702,47 @@ export const addressService = {
   },
 };
 
+// ========== UPSELL (IA) ==========
+
+export const upsellService = {
+  // Buscar sugestoes de upsell com IA
+  async getSugestoes(produtosIds = []) {
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      const clienteId = user.idUsuario || user.id;
+
+      if (!clienteId) {
+        console.log('Usuario nao logado para upsell');
+        return { success: true, data: [] };
+      }
+
+      const response = await request(`/upsell/${clienteId}`, {
+        method: 'POST',
+        body: JSON.stringify({ produtosIds }),
+      });
+
+      // A API retorna um array de sugestoes
+      const sugestoes = Array.isArray(response) ? response : [];
+
+      return {
+        success: true,
+        data: sugestoes.map(s => ({
+          id: s.id,
+          nome: s.nome,
+          preco: s.preco,
+          categoria: s.categoriaProduto,
+          motivo: s.motivo,
+        })),
+      };
+    } catch (error) {
+      console.error('Upsell error:', error);
+      // Nunca quebra o checkout - retorna array vazio em caso de erro
+      return { success: true, data: [] };
+    }
+  },
+};
+
 // Exporta tudo junto tambem para facilitar
 export default {
   auth: authService,
@@ -693,4 +750,5 @@ export default {
   orders: orderService,
   addresses: addressService,
   user: userService,
+  upsell: upsellService,
 };

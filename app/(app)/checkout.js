@@ -8,11 +8,12 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
-import { orderService, addressService } from '../../services/api';
-import { colors, spacing, borderRadius, shadows } from '../../constants/theme';
+import { orderService, addressService, upsellService } from '../../services/api';
+import { colors, spacing, borderRadius } from '../../constants/theme';
 
 export default function CheckoutScreen() {
   const { user } = useAuth();
@@ -30,6 +31,11 @@ export default function CheckoutScreen() {
   // Estado do pedido
   const [creatingOrder, setCreatingOrder] = useState(false);
 
+  // Estado do upsell (IA)
+  const [upsellSugestoes, setUpsellSugestoes] = useState([]);
+  const [loadingUpsell, setLoadingUpsell] = useState(true);
+  const [extrasAdicionados, setExtrasAdicionados] = useState([]);
+
   // Formulario de endereco
   const [addressForm, setAddressForm] = useState({
     rua: '',
@@ -45,13 +51,44 @@ export default function CheckoutScreen() {
     // Parse dos dados do pedido
     if (params.orderData) {
       try {
-        setOrderData(JSON.parse(params.orderData));
+        const parsed = JSON.parse(params.orderData);
+        setOrderData(parsed);
+        // Carrega sugestoes de upsell em paralelo
+        loadUpsellSugestoes(parsed);
       } catch (e) {
         console.error('Erro ao parsear orderData:', e);
       }
     }
     loadUserAddress();
   }, [params.orderData]);
+
+  const loadUpsellSugestoes = async (pedidoData) => {
+    setLoadingUpsell(true);
+    try {
+      // Coleta IDs dos produtos no carrinho
+      const produtosIds = [];
+      if (pedidoData?.pizza?.flavor1?.id) {
+        produtosIds.push(pedidoData.pizza.flavor1.id);
+      }
+      if (pedidoData?.pizza?.flavor2?.id) {
+        produtosIds.push(pedidoData.pizza.flavor2.id);
+      }
+      if (pedidoData?.drinks) {
+        pedidoData.drinks.forEach(drink => {
+          if (drink.id) produtosIds.push(drink.id);
+        });
+      }
+
+      const result = await upsellService.getSugestoes(produtosIds);
+      if (result.success) {
+        setUpsellSugestoes(result.data);
+      }
+    } catch (error) {
+      console.log('Erro ao carregar upsell:', error);
+    } finally {
+      setLoadingUpsell(false);
+    }
+  };
 
   const loadUserAddress = async () => {
     setLoadingAddress(true);
@@ -108,6 +145,24 @@ export default function CheckoutScreen() {
     }
   };
 
+  // Toggle para adicionar/remover extra do upsell
+  const toggleExtra = (sugestao) => {
+    setExtrasAdicionados(prev => {
+      const existe = prev.find(item => item.id === sugestao.id);
+      if (existe) {
+        return prev.filter(item => item.id !== sugestao.id);
+      }
+      return [...prev, sugestao];
+    });
+  };
+
+  // Calcula o total incluindo extras
+  const calcularTotal = () => {
+    const totalBase = orderData?.total || 0;
+    const totalExtras = extrasAdicionados.reduce((acc, item) => acc + item.preco, 0);
+    return totalBase + totalExtras;
+  };
+
   const handleFinishOrder = async () => {
     if (!userAddress) {
       Alert.alert('Endereco necessario', 'Cadastre um endereco para continuar.');
@@ -116,8 +171,18 @@ export default function CheckoutScreen() {
 
     setCreatingOrder(true);
 
+    // Inclui os extras do upsell no pedido
+    const extrasParaPedido = extrasAdicionados.map(extra => ({
+      id: extra.id,
+      name: extra.nome,
+      price: extra.preco,
+      quantity: 1,
+    }));
+
     const finalOrderData = {
       ...orderData,
+      drinks: [...(orderData.drinks || []), ...extrasParaPedido],
+      total: calcularTotal(),
       enderecoId: userAddress.id,
       tipoEntrega: 'DELIVERY',
     };
@@ -127,17 +192,38 @@ export default function CheckoutScreen() {
     setCreatingOrder(false);
 
     if (result.success) {
-      // Redireciona para tela de sucesso com animacao
       router.replace({
         pathname: '/(app)/order-success',
         params: {
           orderId: result.order.id,
-          total: orderData?.total,
+          total: calcularTotal(),
         },
       });
     } else {
       Alert.alert('Erro no pedido', result.error || 'Nao foi possivel criar o pedido. Tente novamente.');
     }
+  };
+
+  // Componente do card de upsell
+  const UpsellCard = ({ sugestao }) => {
+    const adicionado = extrasAdicionados.some(item => item.id === sugestao.id);
+
+    return (
+      <TouchableOpacity
+        style={[styles.upsellItemCard, adicionado && styles.upsellItemCardAtivo]}
+        onPress={() => toggleExtra(sugestao)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.upsellItemNome} numberOfLines={1}>{sugestao.nome}</Text>
+        <Text style={styles.upsellItemMotivo} numberOfLines={2}>{sugestao.motivo}</Text>
+        <View style={styles.upsellItemRodape}>
+          <Text style={styles.upsellItemPreco}>R$ {sugestao.preco.toFixed(2)}</Text>
+          <Text style={[styles.upsellItemBotao, adicionado && styles.upsellItemBotaoAtivo]}>
+            {adicionado ? '✓ Adicionado' : '+ Adicionar'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   if (loadingAddress || !orderData) {
@@ -197,11 +283,25 @@ export default function CheckoutScreen() {
               </View>
             ))}
 
+            {/* Extras adicionados do upsell */}
+            {extrasAdicionados.map((extra, index) => (
+              <View key={`extra-${index}`} style={styles.itemRow}>
+                <View style={styles.itemInfo}>
+                  <Text style={[styles.itemName, styles.itemExtra]}>
+                    1x {extra.nome} (adicionado)
+                  </Text>
+                </View>
+                <Text style={styles.itemPrice}>
+                  R$ {extra.preco.toFixed(2)}
+                </Text>
+              </View>
+            ))}
+
             <View style={styles.divider} />
 
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>R$ {orderData.total?.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>R$ {calcularTotal().toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -352,12 +452,30 @@ export default function CheckoutScreen() {
           )}
         </View>
 
-        {/* Espaco para Upsell (futuro) */}
+        {/* Secao de Upsell com IA */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💡 Sugestoes para voce</Text>
-          <View style={styles.upsellCard}>
-            <Text style={styles.upsellText}>Em breve: sugestoes personalizadas com IA</Text>
-          </View>
+          <Text style={styles.sectionTitle}>✨ Sugestoes para voce</Text>
+          <Text style={styles.sectionSubtitle}>Recomendado especialmente para voce</Text>
+
+          {loadingUpsell ? (
+            <View style={styles.upsellLoading}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.upsellLoadingText}>Preparando sugestoes...</Text>
+            </View>
+          ) : upsellSugestoes.length > 0 ? (
+            <FlatList
+              data={upsellSugestoes}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item }) => <UpsellCard sugestao={item} />}
+              contentContainerStyle={styles.upsellList}
+            />
+          ) : (
+            <View style={styles.upsellVazio}>
+              <Text style={styles.upsellVazioText}>Nenhuma sugestao disponivel no momento</Text>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 120 }} />
@@ -368,7 +486,7 @@ export default function CheckoutScreen() {
         <View style={styles.bottomContent}>
           <View>
             <Text style={styles.bottomLabel}>Total</Text>
-            <Text style={styles.bottomTotal}>R$ {orderData.total?.toFixed(2)}</Text>
+            <Text style={styles.bottomTotal}>R$ {calcularTotal().toFixed(2)}</Text>
           </View>
           <TouchableOpacity
             style={[
@@ -446,6 +564,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
     marginBottom: spacing.md,
   },
   card: {
@@ -467,6 +590,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+  },
+  itemExtra: {
+    color: colors.success,
   },
   itemDetail: {
     fontSize: 14,
@@ -512,7 +638,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedBadge: {
-    backgroundColor: colors.successLight,
+    backgroundColor: colors.successLight || '#E8F5E9',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
@@ -587,7 +713,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textInverse,
   },
-  upsellCard: {
+  // Estilos do Upsell
+  upsellLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+  },
+  upsellLoadingText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginLeft: spacing.sm,
+  },
+  upsellList: {
+    paddingVertical: spacing.sm,
+  },
+  upsellVazio: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.xl,
@@ -596,9 +736,52 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderStyle: 'dashed',
   },
-  upsellText: {
+  upsellVazioText: {
     fontSize: 14,
     color: colors.textMuted,
+  },
+  upsellItemCard: {
+    width: 160,
+    padding: spacing.md,
+    marginRight: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  upsellItemCardAtivo: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight || '#FFF5F5',
+  },
+  upsellItemNome: {
+    fontWeight: '700',
+    fontSize: 14,
+    color: colors.text,
+  },
+  upsellItemMotivo: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginVertical: spacing.sm,
+    lineHeight: 15,
+  },
+  upsellItemRodape: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  upsellItemPreco: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  upsellItemBotao: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  upsellItemBotaoAtivo: {
+    color: colors.success,
   },
   bottomBar: {
     position: 'absolute',
