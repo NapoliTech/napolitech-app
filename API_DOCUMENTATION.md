@@ -12,6 +12,9 @@ API REST para sistema de gerenciamento de pizzaria com os seguintes modulos:
 
 **Base URL:** `http://localhost:8080`
 
+No app mobile/web, a URL do backend deve ser definida por variavel de ambiente em `EXPO_PUBLIC_API_BASE_URL`.
+Exemplo para ngrok: `https://seu-dominio.ngrok-free.app/api`
+
 ---
 
 ## 1. USUARIOS (`/api`)

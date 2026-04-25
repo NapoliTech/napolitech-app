@@ -31,6 +31,9 @@ export default function CheckoutScreen() {
   // Estado do pedido
   const [creatingOrder, setCreatingOrder] = useState(false);
 
+  // Estado do CEP
+  const [loadingCep, setLoadingCep] = useState(false);
+
   // Estado do upsell (IA)
   const [upsellSugestoes, setUpsellSugestoes] = useState([]);
   const [loadingUpsell, setLoadingUpsell] = useState(true);
@@ -108,14 +111,35 @@ export default function CheckoutScreen() {
     }
   };
 
-  const formatCep = (text) => {
+  const formatCep = async (text) => {
     const numbers = text.replace(/\D/g, '');
-    if (numbers.length <= 8) {
-      let formatted = numbers;
-      if (numbers.length > 5) {
-        formatted = `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    if (numbers.length > 8) return;
+
+    let formatted = numbers;
+    if (numbers.length > 5) {
+      formatted = `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    }
+    setAddressForm(prev => ({ ...prev, cep: formatted }));
+
+    if (numbers.length === 8) {
+      setLoadingCep(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${numbers}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setAddressForm(prev => ({
+            ...prev,
+            rua: data.logradouro || prev.rua,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado,
+          }));
+        }
+      } catch (e) {
+        // silencia erro — usuario preenche manual
+      } finally {
+        setLoadingCep(false);
       }
-      setAddressForm(prev => ({ ...prev, cep: formatted }));
     }
   };
 
@@ -345,7 +369,9 @@ export default function CheckoutScreen() {
               </Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>CEP</Text>
+                <Text style={styles.inputLabel}>
+                  CEP{loadingCep ? '  Buscando...' : ''}
+                </Text>
                 <TextInput
                   style={styles.input}
                   placeholder="00000-000"

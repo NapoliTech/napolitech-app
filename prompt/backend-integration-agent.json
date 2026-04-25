@@ -1,0 +1,158 @@
+{
+  "agent_name": "Backend Integration Architect",
+  "goal": "Adaptar e estabilizar o backend Java Spring Boot para integrar com o front-end Expo/React Native via ngrok, sem IP fixo, com suporte a Redis, RabbitMQ e um agente Llama, garantindo contrato de API consistente, CORS correto, autenticação funcional e ambiente configurável por variáveis.",
+  "context": {
+    "frontend": {
+      "framework": "Expo Router / React Native",
+      "api_access_pattern": "Todo acesso ao backend passa por um service central em services/api.js",
+      "base_url_strategy": "O front lê a URL por EXPO_PUBLIC_API_BASE_URL, com fallback para expoConfig.extra.apiBaseUrl e fallback local",
+      "expected_api_prefix": "/api",
+      "auth": "Bearer token JWT salvo em AsyncStorage",
+      "important_note": "Não hardcode IP no front; a URL do backend deve vir do ambiente"
+    },
+    "backend_stack": {
+      "language": "Java",
+      "framework": "Spring Boot",
+      "infrastructure": ["Redis", "RabbitMQ", "Llama agent"],
+      "exposure": "Deve ser acessível externamente via ngrok"
+    },
+    "business_goal": "Permitir que front e backend conversem de forma estável durante desenvolvimento e, se possível, também em staging, sem editar IP manualmente a cada mudança"
+  },
+  "instructions": [
+    "Analise o contrato atual do front em services/api.js e API_DOCUMENTATION.md antes de alterar qualquer endpoint.",
+    "Faça o backend aceitar a URL pública do ngrok via configuração, sem depender de localhost hardcoded.",
+    "Garanta que todas as rotas do backend permaneçam sob o prefixo /api.",
+    "Se houver autenticação JWT, mantenha o fluxo compatível com Bearer token no header Authorization.",
+    "Se houver CORS, configure de forma explícita para aceitar o domínio do front e o domínio do ngrok durante desenvolvimento.",
+    "Se o backend usar cookies ou sessão, documente e implemente as flags corretas de CORS e credentials; caso contrário, prefira JWT stateless.",
+    "Não altere o front para apontar para IPs fixos. A única fonte de verdade da URL deve ser variável de ambiente ou configuração do app.",
+    "Se precisar expor variáveis no Spring Boot, use application.yml, application-dev.yml, variáveis de ambiente e/ou properties com placeholder.",
+    "Não use URLs locais como base para o mobile/web quando o ambiente de desenvolvimento estiver em ngrok.",
+    "Depois de implementar, produza documentação objetiva do que foi mudado e como subir o sistema localmente e via ngrok."
+  ],
+  "required_tasks": [
+    {
+      "area": "API contract",
+      "tasks": [
+        "Inventariar endpoints existentes e alinhar com o front",
+        "Garantir que login, cadastro, produtos, pedidos, endereços e demais rotas documentadas permaneçam estáveis",
+        "Validar respostas, status codes e payloads esperados pelo front"
+      ]
+    },
+    {
+      "area": "Spring Boot configuration",
+      "tasks": [
+        "Criar configuração para base URL pública do backend por ambiente",
+        "Garantir bind em 0.0.0.0 ou equivalente para aceitar conexões externas",
+        "Mapear porta padrão e torná-la configurável"
+      ]
+    },
+    {
+      "area": "CORS and networking",
+      "tasks": [
+        "Habilitar CORS somente para origens necessárias durante desenvolvimento",
+        "Permitir chamadas do front web e mobile usando a URL do ngrok",
+        "Revisar preflight OPTIONS e headers permitidos"
+      ]
+    },
+    {
+      "area": "Redis",
+      "tasks": [
+        "Separar corretamente responsabilidades de cache, sessão ou rate limit se aplicável",
+        "Garantir que a integração com Redis não quebre o fluxo de autenticação e pedidos",
+        "Documentar chaves, TTLs e comportamento esperado"
+      ]
+    },
+    {
+      "area": "RabbitMQ",
+      "tasks": [
+        "Garantir que filas, exchanges e bindings estejam consistentes com o domínio de pedidos/notificações",
+        "Validar produção e consumo de eventos sem bloquear a API",
+        "Adicionar estratégia de retry, DLQ ou log de falhas se aplicável"
+      ]
+    },
+    {
+      "area": "Llama agent",
+      "tasks": [
+        "Definir claramente o papel do agente Llama no backend",
+        "Expor endpoints ou consumidores necessários para acionar o agente",
+        "Garantir que o agente não quebre o contrato principal de pedidos e autenticação"
+      ]
+    }
+  ],
+  "implementation_requirements": {
+    "environment_variables": [
+      "SPRING_PROFILES_ACTIVE",
+      "SERVER_PORT",
+      "SERVER_ADDRESS",
+      "FRONTEND_ALLOWED_ORIGINS",
+      "JWT_SECRET",
+      "REDIS_URL",
+      "RABBITMQ_HOST",
+      "RABBITMQ_PORT",
+      "RABBITMQ_USERNAME",
+      "RABBITMQ_PASSWORD",
+      "LLAMA_API_URL",
+      "LLAMA_API_KEY",
+      "PUBLIC_API_BASE_URL"
+    ],
+    "spring_boot_expectations": [
+      "Usar application.yml e, se necessário, application-dev.yml",
+      "Separar config de web, security, redis e rabbitmq",
+      "Registrar beans e properties de forma limpa",
+      "Não deixar dependências de IP fixo no código"
+    ],
+    "ngrok_expectations": [
+      "Executar ngrok apontando para a porta do backend",
+      "Usar a URL https gerada pelo ngrok como base pública temporária",
+      "Atualizar EXPO_PUBLIC_API_BASE_URL no front com a URL terminando em /api"
+    ]
+  },
+  "acceptance_criteria": [
+    "O front consegue fazer login sem alterar código a cada troca de IP",
+    "A URL do backend vem do ambiente e não do código-fonte do front",
+    "O backend responde corretamente via ngrok",
+    "CORS não bloqueia o front",
+    "Redis e RabbitMQ continuam funcionais",
+    "O agente Llama está integrado sem quebrar o fluxo principal",
+    "Existe documentação de execução local e via ngrok"
+  ],
+  "deliverables": [
+    "Resumo técnico do que foi alterado no backend",
+    "Lista de arquivos alterados",
+    "Configuração final de ambiente",
+    "Passo a passo para rodar backend localmente",
+    "Passo a passo para rodar backend com ngrok",
+    "Passo a passo para apontar o front para o backend",
+    "Checklist de validação final"
+  ],
+  "execution_order": [
+    "1. Ler o contrato do front e a documentação da API",
+    "2. Identificar e remover qualquer IP fixo ou localhost hardcoded no backend",
+    "3. Configurar CORS e binding externo",
+    "4. Validar JWT e headers esperados pelo front",
+    "5. Integrar Redis, RabbitMQ e Llama sem quebrar a API",
+    "6. Documentar variáveis de ambiente e comandos",
+    "7. Validar ponta a ponta com ngrok"
+  ],
+  "validation_steps": [
+    "Subir o backend localmente",
+    "Subir ngrok na porta do backend",
+    "Testar login e fetch de dados pelo front",
+    "Verificar headers CORS e resposta OPTIONS",
+    "Verificar logs de Redis e RabbitMQ",
+    "Confirmar que a URL pública está funcionando com HTTPS"
+  ],
+  "output_format": {
+    "required": [
+      "summary",
+      "changed_files",
+      "env_example",
+      "run_commands",
+      "ngrok_commands",
+      "validation_results",
+      "known_risks"
+    ],
+    "style": "objetivo, técnico, sem suposições, sem omitir etapas críticas"
+  }
+}

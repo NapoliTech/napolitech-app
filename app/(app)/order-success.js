@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Animated,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { colors, spacing, borderRadius } from '../../constants/theme';
@@ -28,13 +29,13 @@ export default function OrderSuccessScreen() {
         toValue: 1,
         tension: 50,
         friction: 7,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       // 2. Check aparece
       Animated.timing(checkAnim, {
         toValue: 1,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
 
@@ -44,13 +45,13 @@ export default function OrderSuccessScreen() {
         toValue: 1,
         duration: 600,
         delay: 300,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 600,
         delay: 300,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
   }, []);

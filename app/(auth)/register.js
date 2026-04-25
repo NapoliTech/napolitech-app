@@ -107,9 +107,13 @@ export default function RegisterScreen() {
     });
 
     if (result.success) {
-      Alert.alert('Conta criada!', 'Seu cadastro foi realizado com sucesso.', [
-        { text: 'Comecar', onPress: () => router.replace('/(app)/order') },
-      ]);
+      if (Platform.OS === 'web') {
+        router.replace('/(app)/order');
+      } else {
+        Alert.alert('Conta criada!', 'Seu cadastro foi realizado com sucesso.', [
+          { text: 'Comecar', onPress: () => router.replace('/(app)/order') },
+        ]);
+      }
     } else {
       Alert.alert('Erro no cadastro', result.error || 'Tente novamente.');
     }

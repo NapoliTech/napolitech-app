@@ -1,9 +1,14 @@
 // API Service - conectado ao backend real
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 // Configuracao do backend
-// Use o IP da sua maquina na rede local (encontre com ipconfig no Windows)
-const API_BASE_URL = 'http://192.168.0.154:8080/api';
+// Prioridade: variavel de ambiente -> extra do Expo -> fallback local
+const API_BASE_URL = (
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  Constants.expoConfig?.extra?.apiBaseUrl ||
+  'http://localhost:8080/api'
+).replace(/\/$/, '');
 
 const extrairNomeProduto = (item) => {
   // Se produto for um array de objetos (meio-a-meio)
@@ -33,8 +38,10 @@ const request = async (endpoint, options = {}) => {
   const token = await AsyncStorage.getItem('token');
 
   const config = {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
@@ -271,7 +278,7 @@ export const productService = {
 
       // Filtra bebidas e mapeia para o formato esperado pelo frontend
       const drinks = products
-        .filter(p => p.categoriaProduto === 'BEBIDAS')
+        .filter(p => p.categoriaProduto === 'BEBIDA')
         .map(p => ({
           id: p.id,
           name: p.nome,
@@ -549,7 +556,7 @@ export const userService = {
         return { success: false, error: 'Usuario nao logado' };
       }
 
-      const response = await request(`/usuarios/${userId}`, {
+      const response = await request(`/${userId}`, {
         method: 'PUT',
         body: JSON.stringify({
           nome: profileData.nome,
@@ -592,7 +599,7 @@ export const userService = {
         return { success: false, error: 'Usuario nao logado' };
       }
 
-      await request(`/usuarios/${userId}`, {
+      await request(`/${userId}`, {
         method: 'DELETE',
       });
 

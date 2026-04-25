@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { orderService } from '../../services/api';
@@ -82,12 +83,12 @@ export default function OrderTrackingScreen() {
         Animated.timing(pulseAnim, {
           toValue: 1.3,
           duration: 800,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 800,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ])
     );

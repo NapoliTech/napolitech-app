@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls c:/Users/aleja/OneDrive/Desktop/app-projeto-completo/napolitech-app/.env*)",
+      "Bash(npx expo:*)"
+    ]
+  }
+}

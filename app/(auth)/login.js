@@ -143,7 +143,7 @@ export default function LoginScreen() {
             <Text style={styles.demoIcon}>🔌</Text>
             <Text style={styles.demoTitle}>Backend conectado</Text>
           </View>
-          <Text style={styles.demoText}>API: http://localhost:8080</Text>
+          <Text style={styles.demoText}>API configurada via ambiente</Text>
           <Text style={styles.demoText}>Use suas credenciais cadastradas</Text>
         </View>
       </ScrollView>
