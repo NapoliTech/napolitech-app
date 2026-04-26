@@ -157,7 +157,13 @@ export default function CheckoutScreen() {
       const result = await addressService.createAddress(addressForm);
 
       if (result.success) {
-        setUserAddress(result.address);
+        // Recarrega da API para garantir o ID real do banco
+        const addressResult = await addressService.getAddresses();
+        if (addressResult.success && addressResult.data.length > 0) {
+          setUserAddress(addressResult.data[0]);
+        } else {
+          setUserAddress(result.address);
+        }
         setShowAddressForm(false);
         Alert.alert('Sucesso', 'Endereco cadastrado com sucesso!');
       } else {

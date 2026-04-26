@@ -282,6 +282,17 @@ export default function ProfileScreen() {
               <Text style={styles.menuText}>Notificacoes</Text>
               <Text style={styles.menuArrow}>→</Text>
             </TouchableOpacity>
+
+            <View style={styles.fieldDivider} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.replace('/(admin)/dashboard')}
+            >
+              <Text style={styles.menuIcon}>⚙️</Text>
+              <Text style={[styles.menuText, styles.adminLinkText]}>Acessar painel admin</Text>
+              <Text style={styles.menuArrow}>→</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -478,6 +489,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.text,
+  },
+  adminLinkText: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   menuArrow: {
     fontSize: 16,

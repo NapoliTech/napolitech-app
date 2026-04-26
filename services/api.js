@@ -115,6 +115,7 @@ export const authService = {
             email: user.email,
             phone: user.telefone,
             cpf: user.cpf,
+            tipoUsuario: user.tipoUsuario,
           },
           token: result.token,
         };
@@ -195,6 +196,7 @@ export const authService = {
             email: userData.email,
             phone: userData.telefone,
             cpf: userData.cpf,
+            tipoUsuario: userData.tipoUsuario,
           },
           token,
         };
@@ -691,7 +693,7 @@ export const addressService = {
         return {
           success: true,
           data: [{
-            id: endereco.id,
+            id: endereco.id || endereco.enderecoId,
             rua: endereco.rua,
             numero: endereco.numero,
             bairro: endereco.bairro,
@@ -752,6 +754,204 @@ export const upsellService = {
   },
 };
 
+// ========== ADMIN ==========
+
+export const adminService = {
+  // Dashboard
+  async getDashboardCards() {
+    try {
+      const response = await request('/dashboard/kpis/cards');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getRevenueByYear(year) {
+    try {
+      const response = await request(`/dashboard/kpis/faturamento/${year}`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getSalesLast7Days() {
+    try {
+      const response = await request('/dashboard/kpis/vendas/ultimos-sete-dias');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getSalesByCategory(year, month) {
+    try {
+      const response = await request(`/dashboard/kpis/vendas/categoria/${year}/${month}`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Pedidos
+  async listPedidos(page = 0, size = 10) {
+    try {
+      const response = await request(`/pedidos?page=${page}&size=${size}&sort=id,desc`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getPedidoById(id) {
+    try {
+      const response = await request(`/pedidos/${id}`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async updatePedidoStatus(id, status) {
+    try {
+      const response = await request(`/pedidos/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Produtos
+  async listProdutos(page = 0, size = 10) {
+    try {
+      const response = await request(`/produtos?page=${page}&size=${size}&sort=id,desc`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async createProduto(data) {
+    try {
+      const response = await request('/produtos', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async deleteProduto(id) {
+    try {
+      const response = await request(`/produtos/${id}`, { method: 'DELETE' });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Usuarios
+  async listUsuarios(page = 0, size = 10) {
+    try {
+      const response = await request(`/usuarios?page=${page}&size=${size}&sort=nome,asc`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getUsuarioById(id) {
+    try {
+      const response = await request(`/${id}`);
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async updateUsuario(id, data) {
+    try {
+      const response = await request(`/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async deleteUsuario(id) {
+    try {
+      const response = await request(`/${id}`, { method: 'DELETE' });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async createAtendente(data) {
+    try {
+      const response = await request('/cadastro/atendente', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async createAdmin(data) {
+    try {
+      const response = await request('/cadastro/admin', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Enderecos
+  async listEnderecos() {
+    try {
+      const response = await request('/enderecos');
+      return { success: true, data: Array.isArray(response) ? response : [] };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async deleteEndereco(id) {
+    try {
+      const response = await request(`/enderecos/${id}`, { method: 'DELETE' });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async updateEndereco(usuarioId, enderecoId, data) {
+    try {
+      const response = await request(`/enderecos/${usuarioId}/${enderecoId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+};
+
 // Exporta tudo junto tambem para facilitar
 export default {
   auth: authService,
@@ -760,4 +960,5 @@ export default {
   addresses: addressService,
   user: userService,
   upsell: upsellService,
+  admin: adminService,
 };
