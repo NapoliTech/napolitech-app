@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -86,11 +87,14 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sair da conta',
-      'Deseja realmente sair?',
-      [
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Deseja realmente sair da conta?')) {
+        await logout();
+        router.replace('/(auth)/login');
+      }
+    } else {
+      Alert.alert('Sair da conta', 'Deseja realmente sair?', [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Sair',
@@ -100,34 +104,47 @@ export default function ProfileScreen() {
             router.replace('/(auth)/login');
           },
         },
-      ]
-    );
+      ]);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Excluir conta',
-      'Tem certeza que deseja excluir sua conta? Esta acao nao pode ser desfeita.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            const result = await userService.deleteAccount();
-            setLoading(false);
-
-            if (result.success) {
-              await logout();
-              router.replace('/(auth)/login');
-            } else {
-              Alert.alert('Erro', result.error || 'Nao foi possivel excluir a conta');
-            }
+  const handleDeleteAccount = async () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Tem certeza que deseja excluir sua conta? Esta acao nao pode ser desfeita.')) {
+        setLoading(true);
+        const result = await userService.deleteAccount();
+        setLoading(false);
+        if (result.success) {
+          await logout();
+          router.replace('/(auth)/login');
+        } else {
+          window.alert(result.error || 'Nao foi possivel excluir a conta');
+        }
+      }
+    } else {
+      Alert.alert(
+        'Excluir conta',
+        'Tem certeza que deseja excluir sua conta? Esta acao nao pode ser desfeita.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Excluir',
+            style: 'destructive',
+            onPress: async () => {
+              setLoading(true);
+              const result = await userService.deleteAccount();
+              setLoading(false);
+              if (result.success) {
+                await logout();
+                router.replace('/(auth)/login');
+              } else {
+                Alert.alert('Erro', result.error || 'Nao foi possivel excluir a conta');
+              }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
@@ -329,7 +346,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.primary,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'web' ? 16 : 60,
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: borderRadius.xl,

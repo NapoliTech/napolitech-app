@@ -270,15 +270,17 @@ export const productService = {
     return { success: true, data: sizes };
   },
 
-  // Buscar bebidas (produtos da categoria BEBIDAS)
+  // Buscar bebidas
   async getDrinks() {
     try {
       const response = await request('/produtos?page=0&size=100');
-      const products = response.content || [];
+      const products = response.content ?? (Array.isArray(response) ? response : []);
 
-      // Filtra bebidas e mapeia para o formato esperado pelo frontend
       const drinks = products
-        .filter(p => p.categoriaProduto === 'BEBIDA')
+        .filter(p => {
+          const cat = (p.categoriaProduto || '').toUpperCase();
+          return cat === 'BEBIDA' || cat === 'BEBIDAS';
+        })
         .map(p => ({
           id: p.id,
           name: p.nome,

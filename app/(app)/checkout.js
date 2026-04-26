@@ -9,6 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   FlatList,
+  Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -558,7 +559,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.primary,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'web' ? 16 : 60,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
   },

@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -107,18 +108,25 @@ export default function OrderScreen() {
 
   const calculateTotal = () => calculatePizzaPrice() + calculateDrinksPrice();
 
-  const handleLogout = () => {
-    Alert.alert('Sair da conta', 'Deseja realmente sair?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/(auth)/login');
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Deseja realmente sair da conta?')) {
+        await logout();
+        router.replace('/(auth)/login');
+      }
+    } else {
+      Alert.alert('Sair da conta', 'Deseja realmente sair?', [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/(auth)/login');
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const handleContinueOrder = () => {
@@ -465,7 +473,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.primary,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'web' ? 16 : 60,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: borderRadius.xl,
