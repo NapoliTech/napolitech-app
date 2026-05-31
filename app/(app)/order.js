@@ -12,11 +12,14 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { productService } from '../../services/api';
 import { colors, spacing, borderRadius } from '../../constants/theme';
 
 export default function OrderScreen() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [flavors, setFlavors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [drinks, setDrinks] = useState([]);
@@ -28,6 +31,19 @@ export default function OrderScreen() {
   const [selectedDrinks, setSelectedDrinks] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState(null);
+
+  const firstName = user?.name?.split(' ')[0] || t('order.guestName');
+
+  const getSizeName = (size) => {
+    if (!size) return '';
+    return t(`order.sizes.${size.id}`, {}, size.name);
+  };
+
+  const getDrinkItemsLabel = () => {
+    const count = selectedDrinks.reduce((sum, drink) => sum + drink.quantity, 0);
+    const key = count === 1 ? 'order.summary.itemSingular' : 'order.summary.itemPlural';
+    return t(key, { count });
+  };
 
   useEffect(() => {
     loadData();
@@ -48,7 +64,7 @@ export default function OrderScreen() {
       }
       if (drinksRes.success) setDrinks(drinksRes.data);
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao carregar dados');
+      Alert.alert(t('order.loadErrorTitle'), t('order.loadErrorMessage'));
     } finally {
       setLoading(false);
     }
@@ -110,15 +126,15 @@ export default function OrderScreen() {
 
   const handleLogout = async () => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Deseja realmente sair da conta?')) {
+      if (window.confirm(t('order.logoutMessage'))) {
         await logout();
         router.replace('/(auth)/login');
       }
     } else {
-      Alert.alert('Sair da conta', 'Deseja realmente sair?', [
-        { text: 'Cancelar', style: 'cancel' },
+      Alert.alert(t('order.logoutTitle'), t('order.logoutMessage'), [
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sair',
+          text: t('common.logout'),
           style: 'destructive',
           onPress: async () => {
             await logout();
@@ -131,7 +147,7 @@ export default function OrderScreen() {
 
   const handleContinueOrder = () => {
     if (!selectedFlavor1) {
-      Alert.alert('Selecione um sabor', 'Escolha pelo menos um sabor de pizza.');
+      Alert.alert(t('order.selectFlavorTitle'), t('order.selectFlavorMessage'));
       return;
     }
 
@@ -158,7 +174,7 @@ export default function OrderScreen() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingEmoji}>🍕</Text>
-        <Text style={styles.loadingText}>Carregando cardapio...</Text>
+        <Text style={styles.loadingText}>{t('order.loading')}</Text>
       </View>
     );
   }
@@ -168,15 +184,18 @@ export default function OrderScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greeting}>Ola, {user?.name?.split(' ')[0]}!</Text>
-            <Text style={styles.headerSubtitle}>O que vai pedir hoje?</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.greeting}>{t('order.greeting', { name: firstName })}</Text>
+            <Text style={styles.headerSubtitle}>{t('order.subtitle')}</Text>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
-            <Text style={styles.avatarText}>
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <LanguageSwitcher variant="primary" />
+            <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
+              <Text style={styles.avatarText}>
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -185,7 +204,7 @@ export default function OrderScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>📏</Text>
-            <Text style={styles.sectionTitle}>Tamanho</Text>
+            <Text style={styles.sectionTitle}>{t('order.sections.size')}</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.sizeContainer}>
@@ -206,9 +225,9 @@ export default function OrderScreen() {
                     styles.sizeName,
                     selectedSize?.id === size.id && styles.sizeNameSelected,
                   ]}>
-                    {size.name}
+                    {getSizeName(size)}
                   </Text>
-                  <Text style={styles.sizeSlices}>{size.slices} fatias</Text>
+                  <Text style={styles.sizeSlices}>{t('order.slices', { count: size.slices })}</Text>
                   {selectedSize?.id === size.id && (
                     <View style={styles.selectedBadge}>
                       <Text style={styles.selectedBadgeText}>✓</Text>
@@ -224,7 +243,7 @@ export default function OrderScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>🧀</Text>
-            <Text style={styles.sectionTitle}>Sabores</Text>
+            <Text style={styles.sectionTitle}>{t('order.sections.flavors')}</Text>
           </View>
 
           <TouchableOpacity
@@ -237,14 +256,14 @@ export default function OrderScreen() {
                 <Text style={styles.flavorBadgeText}>1</Text>
               </View>
               <View style={styles.flavorInfo}>
-                <Text style={styles.flavorLabel}>Primeira metade</Text>
+                <Text style={styles.flavorLabel}>{t('order.firstHalf')}</Text>
                 {selectedFlavor1 ? (
                   <>
                     <Text style={styles.flavorName}>{selectedFlavor1.name}</Text>
                     <Text style={styles.flavorPrice}>R$ {selectedFlavor1.price.toFixed(2)}</Text>
                   </>
                 ) : (
-                  <Text style={styles.flavorPlaceholder}>Toque para escolher</Text>
+                  <Text style={styles.flavorPlaceholder}>{t('order.chooseFlavor')}</Text>
                 )}
               </View>
             </View>
@@ -261,14 +280,14 @@ export default function OrderScreen() {
                 <Text style={styles.flavorBadgeText}>2</Text>
               </View>
               <View style={styles.flavorInfo}>
-                <Text style={styles.flavorLabel}>Segunda metade (opcional)</Text>
+                <Text style={styles.flavorLabel}>{t('order.secondHalf')}</Text>
                 {selectedFlavor2 ? (
                   <>
                     <Text style={styles.flavorName}>{selectedFlavor2.name}</Text>
                     <Text style={styles.flavorPrice}>R$ {selectedFlavor2.price.toFixed(2)}</Text>
                   </>
                 ) : (
-                  <Text style={styles.flavorPlaceholder}>Deixe vazio para pizza inteira</Text>
+                  <Text style={styles.flavorPlaceholder}>{t('order.wholePizza')}</Text>
                 )}
               </View>
             </View>
@@ -280,7 +299,7 @@ export default function OrderScreen() {
               style={styles.removeButton}
               onPress={() => setSelectedFlavor2(null)}
             >
-              <Text style={styles.removeButtonText}>x Remover 2a metade</Text>
+              <Text style={styles.removeButtonText}>{t('order.removeSecondHalf')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -289,7 +308,7 @@ export default function OrderScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>🥤</Text>
-            <Text style={styles.sectionTitle}>Bebidas</Text>
+            <Text style={styles.sectionTitle}>{t('order.sections.drinks')}</Text>
           </View>
 
           <TouchableOpacity
@@ -298,7 +317,7 @@ export default function OrderScreen() {
             activeOpacity={0.7}
           >
             <Text style={styles.addDrinkIcon}>+</Text>
-            <Text style={styles.addDrinkText}>Adicionar bebida</Text>
+            <Text style={styles.addDrinkText}>{t('order.addDrink')}</Text>
           </TouchableOpacity>
 
           {selectedDrinks.map(drink => (
@@ -332,7 +351,7 @@ export default function OrderScreen() {
         <View style={styles.summarySection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionIcon}>📋</Text>
-            <Text style={styles.sectionTitle}>Resumo do pedido</Text>
+            <Text style={styles.sectionTitle}>{t('order.sections.summary')}</Text>
           </View>
 
           <View style={styles.summaryCard}>
@@ -340,7 +359,7 @@ export default function OrderScreen() {
               <View style={styles.summaryRow}>
                 <View style={styles.summaryItemInfo}>
                   <Text style={styles.summaryItemName}>
-                    Pizza {selectedSize?.name}
+                    {t('order.summary.pizzaSize', { size: getSizeName(selectedSize) })}
                   </Text>
                   <Text style={styles.summaryItemDetail}>
                     {selectedFlavor2
@@ -357,9 +376,9 @@ export default function OrderScreen() {
             {selectedDrinks.length > 0 && (
               <View style={styles.summaryRow}>
                 <View style={styles.summaryItemInfo}>
-                  <Text style={styles.summaryItemName}>Bebidas</Text>
+                  <Text style={styles.summaryItemName}>{t('order.summary.drinks')}</Text>
                   <Text style={styles.summaryItemDetail}>
-                    {selectedDrinks.reduce((sum, d) => sum + d.quantity, 0)} itens
+                    {getDrinkItemsLabel()}
                   </Text>
                 </View>
                 <Text style={styles.summaryItemPrice}>
@@ -371,7 +390,7 @@ export default function OrderScreen() {
             <View style={styles.summaryDivider} />
 
             <View style={styles.summaryTotal}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{t('common.total')}</Text>
               <Text style={styles.totalValue}>R$ {calculateTotal().toFixed(2)}</Text>
             </View>
           </View>
@@ -384,7 +403,7 @@ export default function OrderScreen() {
       <View style={styles.bottomBar}>
         <View style={styles.bottomBarContent}>
           <View>
-            <Text style={styles.bottomLabel}>Total do pedido</Text>
+            <Text style={styles.bottomLabel}>{t('order.bottomTotal')}</Text>
             <Text style={styles.bottomTotal}>R$ {calculateTotal().toFixed(2)}</Text>
           </View>
           <TouchableOpacity
@@ -393,7 +412,7 @@ export default function OrderScreen() {
             disabled={!selectedFlavor1}
             activeOpacity={0.8}
           >
-            <Text style={styles.orderButtonText}>Continuar compra</Text>
+            <Text style={styles.orderButtonText}>{t('order.continue')}</Text>
             <Text style={styles.orderButtonIcon}>→</Text>
           </TouchableOpacity>
         </View>
@@ -416,7 +435,7 @@ export default function OrderScreen() {
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {modalType === 'drink' ? '🥤 Escolha a bebida' : '🍕 Escolha o sabor'}
+                {modalType === 'drink' ? t('order.chooseDrinkModal') : t('order.chooseFlavorModal')}
               </Text>
               <TouchableOpacity
                 style={styles.modalClose}
@@ -483,6 +502,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerText: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   greeting: {
     fontSize: 24,

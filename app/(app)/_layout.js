@@ -1,5 +1,6 @@
 import { Tabs, Stack, Redirect } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { colors } from '../../constants/theme';
 
@@ -21,6 +22,7 @@ function TabBarIcon({ name, focused }) {
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -47,21 +49,21 @@ export default function AppLayout() {
       <Tabs.Screen
         name="order"
         options={{
-          title: 'Pedir',
+          title: t('tabs.order'),
           tabBarIcon: ({ focused }) => <TabBarIcon name="order" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
-          title: 'Pedidos',
+          title: t('tabs.orders'),
           tabBarIcon: ({ focused }) => <TabBarIcon name="orders" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
+          title: t('tabs.profile'),
           tabBarIcon: ({ focused }) => <TabBarIcon name="profile" focused={focused} />,
         }}
       />

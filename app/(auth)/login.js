@@ -10,10 +10,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { colors, spacing, borderRadius, shadows } from '../../constants/theme';
 
 export default function LoginScreen() {
@@ -21,10 +22,11 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha email e senha.');
+      Alert.alert(t('login.alerts.requiredTitle'), t('login.alerts.requiredMessage'));
       return;
     }
 
@@ -33,7 +35,7 @@ export default function LoginScreen() {
     if (result.success) {
       router.replace('/(app)/order');
     } else {
-      Alert.alert('Erro no login', result.error || 'Verifique suas credenciais.');
+      Alert.alert(t('login.alerts.errorTitle'), result.error || t('login.alerts.errorMessage'));
     }
   };
 
@@ -47,23 +49,27 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.topActions}>
+          <LanguageSwitcher />
+        </View>
+
         {/* Header/Brand */}
         <View style={styles.brandContainer}>
           <View style={styles.logoWrapper}>
             <Text style={styles.logoIcon}>🍕</Text>
           </View>
           <Text style={styles.brandName}>Napolitech</Text>
-          <Text style={styles.brandTagline}>Sua pizzaria favorita</Text>
+          <Text style={styles.brandTagline}>{t('login.brandTagline')}</Text>
         </View>
 
         {/* Form Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Bem-vindo de volta</Text>
-          <Text style={styles.cardSubtitle}>Entre para fazer seu pedido</Text>
+          <Text style={styles.cardTitle}>{t('login.title')}</Text>
+          <Text style={styles.cardSubtitle}>{t('login.subtitle')}</Text>
 
           {/* Email Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('common.email')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
@@ -81,12 +87,12 @@ export default function LoginScreen() {
 
           {/* Password Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Senha</Text>
+            <Text style={styles.label}>{t('common.password')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Sua senha"
+                placeholder={t('login.passwordPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -105,7 +111,7 @@ export default function LoginScreen() {
 
           {/* Forgot Password */}
           <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+            <Text style={styles.forgotPasswordText}>{t('login.forgotPassword')}</Text>
           </TouchableOpacity>
 
           {/* Login Button */}
@@ -118,21 +124,21 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.primaryButtonText}>Entrar</Text>
+              <Text style={styles.primaryButtonText}>{t('login.submit')}</Text>
             )}
           </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou</Text>
+            <Text style={styles.dividerText}>{t('login.divider')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
           {/* Register Link */}
           <Link href="/(auth)/register" asChild>
             <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.8}>
-              <Text style={styles.secondaryButtonText}>Criar nova conta</Text>
+              <Text style={styles.secondaryButtonText}>{t('login.createAccount')}</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -141,10 +147,10 @@ export default function LoginScreen() {
         <View style={styles.demoCard}>
           <View style={styles.demoHeader}>
             <Text style={styles.demoIcon}>🔌</Text>
-            <Text style={styles.demoTitle}>Backend conectado</Text>
+            <Text style={styles.demoTitle}>{t('login.backendTitle')}</Text>
           </View>
-          <Text style={styles.demoText}>API configurada via ambiente</Text>
-          <Text style={styles.demoText}>Use suas credenciais cadastradas</Text>
+          <Text style={styles.demoText}>{t('login.backendConfigured')}</Text>
+          <Text style={styles.demoText}>{t('login.backendHelp')}</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -160,6 +166,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: spacing.lg,
     paddingTop: spacing.xxl + spacing.lg,
+  },
+  topActions: {
+    alignItems: 'flex-end',
+    marginBottom: spacing.lg,
   },
   brandContainer: {
     alignItems: 'center',

@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { colors, spacing, borderRadius, shadows } from '../../constants/theme';
 
 export default function RegisterScreen() {
@@ -25,6 +27,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { register, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   const formatPhone = (text) => {
     const numbers = text.replace(/\D/g, '');
@@ -73,27 +76,27 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !phone.trim() || !cpf.trim() || !dataNasc.trim() || !password.trim()) {
-      Alert.alert('Campos obrigatorios', 'Por favor, preencha todos os campos.');
+      Alert.alert(t('register.alerts.requiredTitle'), t('register.alerts.requiredMessage'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Senhas diferentes', 'As senhas digitadas nao conferem.');
+      Alert.alert(t('register.alerts.passwordMismatchTitle'), t('register.alerts.passwordMismatchMessage'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Senha fraca', 'A senha deve ter pelo menos 6 caracteres.');
+      Alert.alert(t('register.alerts.weakPasswordTitle'), t('register.alerts.weakPasswordMessage'));
       return;
     }
 
     if (cpf.replace(/\D/g, '').length !== 11) {
-      Alert.alert('CPF invalido', 'O CPF deve ter 11 digitos.');
+      Alert.alert(t('register.alerts.invalidCpfTitle'), t('register.alerts.invalidCpfMessage'));
       return;
     }
 
     if (dataNasc.length !== 10) {
-      Alert.alert('Data invalida', 'Informe a data no formato DD/MM/AAAA.');
+      Alert.alert(t('register.alerts.invalidDateTitle'), t('register.alerts.invalidDateMessage'));
       return;
     }
 
@@ -110,12 +113,12 @@ export default function RegisterScreen() {
       if (Platform.OS === 'web') {
         router.replace('/(app)/order');
       } else {
-        Alert.alert('Conta criada!', 'Seu cadastro foi realizado com sucesso.', [
-          { text: 'Comecar', onPress: () => router.replace('/(app)/order') },
+        Alert.alert(t('register.alerts.successTitle'), t('register.alerts.successMessage'), [
+          { text: t('register.alerts.successButton'), onPress: () => router.replace('/(app)/order') },
         ]);
       }
     } else {
-      Alert.alert('Erro no cadastro', result.error || 'Tente novamente.');
+      Alert.alert(t('register.alerts.errorTitle'), result.error || t('register.alerts.errorMessage'));
     }
   };
 
@@ -136,6 +139,7 @@ export default function RegisterScreen() {
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
           </Link>
+          <LanguageSwitcher />
         </View>
 
         {/* Brand */}
@@ -143,20 +147,20 @@ export default function RegisterScreen() {
           <View style={styles.logoWrapper}>
             <Text style={styles.logoIcon}>🍕</Text>
           </View>
-          <Text style={styles.title}>Criar conta</Text>
-          <Text style={styles.subtitle}>Junte-se a familia Napolitech</Text>
+          <Text style={styles.title}>{t('register.title')}</Text>
+          <Text style={styles.subtitle}>{t('register.subtitle')}</Text>
         </View>
 
         {/* Form Card */}
         <View style={styles.card}>
           {/* Nome */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome completo</Text>
+            <Text style={styles.label}>{t('register.fullName')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>👤</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Seu nome"
+                placeholder={t('register.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={name}
                 onChangeText={setName}
@@ -167,7 +171,7 @@ export default function RegisterScreen() {
 
           {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('common.email')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
@@ -185,7 +189,7 @@ export default function RegisterScreen() {
 
           {/* Telefone */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Telefone</Text>
+            <Text style={styles.label}>{t('register.phone')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>📱</Text>
               <TextInput
@@ -217,12 +221,12 @@ export default function RegisterScreen() {
 
           {/* Data de Nascimento */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Data de nascimento</Text>
+            <Text style={styles.label}>{t('register.birthDate')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>📅</Text>
               <TextInput
                 style={styles.input}
-                placeholder="DD/MM/AAAA"
+                placeholder={t('register.birthDatePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={dataNasc}
                 onChangeText={formatDate}
@@ -233,12 +237,12 @@ export default function RegisterScreen() {
 
           {/* Senha */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Senha</Text>
+            <Text style={styles.label}>{t('common.password')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Minimo 6 caracteres"
+                placeholder={t('register.passwordPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -257,12 +261,12 @@ export default function RegisterScreen() {
 
           {/* Confirmar Senha */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirmar senha</Text>
+            <Text style={styles.label}>{t('register.confirmPassword')}</Text>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputIcon}>🔐</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Repita a senha"
+                placeholder={t('register.confirmPasswordPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -281,24 +285,25 @@ export default function RegisterScreen() {
             {isLoading ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.primaryButtonText}>Criar minha conta</Text>
+              <Text style={styles.primaryButtonText}>{t('register.submit')}</Text>
             )}
           </TouchableOpacity>
 
           {/* Terms */}
           <Text style={styles.terms}>
-            Ao criar sua conta, voce concorda com nossos{' '}
-            <Text style={styles.termsLink}>Termos de Uso</Text> e{' '}
-            <Text style={styles.termsLink}>Politica de Privacidade</Text>
+            {t('register.termsPrefix')}{' '}
+            <Text style={styles.termsLink}>{t('register.termsUse')}</Text>{' '}
+            {t('register.termsAnd')}{' '}
+            <Text style={styles.termsLink}>{t('register.privacyPolicy')}</Text>
           </Text>
         </View>
 
         {/* Login Link */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Ja tem uma conta? </Text>
+          <Text style={styles.footerText}>{t('register.footerPrompt')}</Text>
           <Link href="/(auth)/login" asChild>
             <TouchableOpacity>
-              <Text style={styles.footerLink}>Faca login</Text>
+              <Text style={styles.footerLink}>{t('register.footerLink')}</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -319,6 +324,9 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: spacing.xl,
     marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   backButton: {
     width: 40,
