@@ -1,14 +1,7 @@
 // API Service - conectado ao backend real
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 
-// Configuracao do backend
-// Prioridade: variavel de ambiente -> extra do Expo -> fallback local
-const API_BASE_URL = (
-  process.env.EXPO_PUBLIC_API_BASE_URL ||
-  Constants.expoConfig?.extra?.apiBaseUrl ||
-  'http://localhost:8080/api'
-).replace(/\/$/, '');
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const extrairNomeProduto = (item) => {
   // Se produto for um array de objetos (meio-a-meio)
@@ -454,6 +447,10 @@ export const orderService = {
 
   // Buscar pedidos do usuario
   async getOrders() {
+    if (USE_MOCK) {
+      return { success: true, data: [] };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};
@@ -493,6 +490,10 @@ export const orderService = {
 
   // Buscar pedido por ID
   async getOrderById(orderId) {
+    if (USE_MOCK) {
+      return { success: false, error: 'Pedido não encontrado' };
+    }
+
     try {
       const response = await request(`/pedidos/${orderId}`);
 
@@ -522,6 +523,24 @@ export const orderService = {
 export const userService = {
   // Buscar dados do usuario
   async getProfile() {
+    if (USE_MOCK) {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      if (user.id) {
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            cpf: '123.456.789-00',
+          },
+        };
+      }
+      return { success: false, error: 'Usuario nao logado' };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};
@@ -551,6 +570,30 @@ export const userService = {
 
   // Atualizar perfil do usuario
   async updateProfile(profileData) {
+    if (USE_MOCK) {
+      const userJson = await AsyncStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : {};
+      if (!user.id) {
+        return { success: false, error: 'Usuario nao logado' };
+      }
+      const updatedUser = {
+        ...user,
+        name: profileData.nome || user.name,
+        phone: profileData.telefone || user.phone,
+      };
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      return {
+        success: true,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          cpf: '123.456.789-00',
+        },
+      };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};
@@ -594,6 +637,12 @@ export const userService = {
 
   // Excluir conta do usuario
   async deleteAccount() {
+    if (USE_MOCK) {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      return { success: true };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};
@@ -624,6 +673,22 @@ export const userService = {
 export const addressService = {
   // Cadastrar endereco
   async createAddress(addressData) {
+    if (USE_MOCK) {
+      return {
+        success: true,
+        address: {
+          id: Date.now(),
+          rua: addressData.rua,
+          numero: addressData.numero,
+          bairro: addressData.bairro,
+          complemento: addressData.complemento || '',
+          cidade: addressData.cidade,
+          estado: addressData.estado,
+          cep: addressData.cep,
+        },
+      };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};
@@ -678,6 +743,10 @@ export const addressService = {
 
   // Buscar enderecos do usuario
   async getAddresses() {
+    if (USE_MOCK) {
+      return { success: true, data: [] };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};
@@ -718,6 +787,10 @@ export const addressService = {
 export const upsellService = {
   // Buscar sugestoes de upsell com IA
   async getSugestoes(produtosIds = []) {
+    if (USE_MOCK) {
+      return { success: true, data: [] };
+    }
+
     try {
       const userJson = await AsyncStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : {};

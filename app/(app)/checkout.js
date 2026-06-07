@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
-import { orderService, addressService, upsellService } from '../../services/api';
+import { orderService, addressService, productService } from '../../services/api';
 import { colors, spacing, borderRadius } from '../../constants/theme';
 
 export default function CheckoutScreen() {
@@ -69,26 +69,47 @@ export default function CheckoutScreen() {
   const loadUpsellSugestoes = async (pedidoData) => {
     setLoadingUpsell(true);
     try {
-      // Coleta IDs dos produtos no carrinho
-      const produtosIds = [];
+      // Coleta IDs dos produtos no carrinho para nao sugerir itens ja pedidos
+      const produtosIds = new Set();
       if (pedidoData?.pizza?.flavor1?.id) {
-        produtosIds.push(pedidoData.pizza.flavor1.id);
+        produtosIds.add(String(pedidoData.pizza.flavor1.id));
       }
       if (pedidoData?.pizza?.flavor2?.id) {
-        produtosIds.push(pedidoData.pizza.flavor2.id);
+        produtosIds.add(String(pedidoData.pizza.flavor2.id));
       }
       if (pedidoData?.drinks) {
         pedidoData.drinks.forEach(drink => {
-          if (drink.id) produtosIds.push(drink.id);
+          if (drink.id) produtosIds.add(String(drink.id));
         });
       }
 
-      const result = await upsellService.getSugestoes(produtosIds);
+      const result = await productService.getProducts(0, 100);
       if (result.success) {
-        setUpsellSugestoes(result.data);
+        const products = Array.isArray(result.data)
+          ? result.data
+          : result.data?.content || [];
+
+        const availableProducts = products.filter(product => {
+          const id = product?.id ? String(product.id) : null;
+          return id && !produtosIds.has(id);
+        });
+
+        const uniqueProducts = Array.from(
+          new Map(availableProducts.map(item => [String(item.id), item])).values()
+        );
+
+        const shuffled = uniqueProducts.sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, 3).map(product => ({
+          id: product.id,
+          nome: product.nome || product.name || 'Produto',
+          preco: product.preco ?? product.price ?? 0,
+          motivo: 'Sugestão especial para você',
+        }));
+
+        setUpsellSugestoes(selected);
       }
     } catch (error) {
-      console.log('Erro ao carregar upsell:', error);
+      console.log('Erro ao carregar sugestoes aleatorias:', error);
     } finally {
       setLoadingUpsell(false);
     }
@@ -485,7 +506,7 @@ export default function CheckoutScreen() {
           )}
         </View>
 
-        {/* Secao de Upsell com IA */}
+        {/* Secao de sugerencias aleatorias */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>✨ Sugestoes para voce</Text>
           <Text style={styles.sectionSubtitle}>Recomendado especialmente para voce</Text>
