@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Modal, TextInput, Platform, Alert,
@@ -120,7 +120,7 @@ function EditUserModal({ visible, usuario, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useState(() => {
+  useEffect(() => {
     if (usuario) { setNome(usuario.nome || usuario.name || ''); setEmail(usuario.email || ''); setError(''); }
   }, [usuario]);
 

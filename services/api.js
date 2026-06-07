@@ -934,7 +934,8 @@ export const adminService = {
   async getUsuarioByEmail(email) {
     try {
       const response = await request(`/email/${encodeURIComponent(email)}`);
-      return { success: true, data: response };
+      const usuario = response.usuario || response;
+      return { success: true, data: usuario };
     } catch (error) {
       return { success: false, error: error.message };
     }

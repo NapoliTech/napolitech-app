@@ -269,22 +269,6 @@ export default function ProfileScreen() {
 
             <View style={styles.fieldDivider} />
 
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuIcon}>📍</Text>
-              <Text style={styles.menuText}>Enderecos salvos</Text>
-              <Text style={styles.menuArrow}>→</Text>
-            </TouchableOpacity>
-
-            <View style={styles.fieldDivider} />
-
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuIcon}>🔔</Text>
-              <Text style={styles.menuText}>Notificacoes</Text>
-              <Text style={styles.menuArrow}>→</Text>
-            </TouchableOpacity>
-
-            <View style={styles.fieldDivider} />
-
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => router.replace('/(admin)/dashboard')}
@@ -293,35 +277,6 @@ export default function ProfileScreen() {
               <Text style={[styles.menuText, styles.adminLinkText]}>Acessar painel admin</Text>
               <Text style={styles.menuArrow}>→</Text>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Sobre */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sobre</Text>
-
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuIcon}>📄</Text>
-              <Text style={styles.menuText}>Termos de uso</Text>
-              <Text style={styles.menuArrow}>→</Text>
-            </TouchableOpacity>
-
-            <View style={styles.fieldDivider} />
-
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuIcon}>🔒</Text>
-              <Text style={styles.menuText}>Politica de privacidade</Text>
-              <Text style={styles.menuArrow}>→</Text>
-            </TouchableOpacity>
-
-            <View style={styles.fieldDivider} />
-
-            <View style={styles.menuItem}>
-              <Text style={styles.menuIcon}>📱</Text>
-              <Text style={styles.menuText}>Versao do app</Text>
-              <Text style={styles.versionText}>1.0.0</Text>
-            </View>
           </View>
         </View>
 
