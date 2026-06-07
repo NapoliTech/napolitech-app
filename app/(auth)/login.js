@@ -174,6 +174,7 @@ const styles = StyleSheet.create({
   brandContainer: {
     alignItems: 'center',
     marginBottom: spacing.xl,
+    backgroundColor: colors.background,
   },
   logoWrapper: {
     width: 80,
@@ -183,15 +184,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
-    ...shadows.lg,
   },
   logoIcon: {
     fontSize: 40,
   },
   brandName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 40,
+    fontWeight: '800',
+    color: colors.primary,
     letterSpacing: -0.5,
   },
   brandTagline: {
@@ -201,16 +201,19 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.lg,
-    ...shadows.md,
+    borderWidth: 1,
+    borderColor: colors.hairline,
   },
   cardTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.xs,
+    lineHeight: 33,
+    letterSpacing: -0.5,
   },
   cardSubtitle: {
     fontSize: 14,
@@ -230,7 +233,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.softCloud,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -263,12 +266,10 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
-    ...shadows.sm,
+    height: 52,
   },
   buttonDisabled: {
     opacity: 0.7,
@@ -294,18 +295,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   secondaryButton: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 52,
+    height: 52,
   },
   secondaryButtonText: {
-    color: colors.text,
-    fontSize: 16,
+    color: colors.primary,
+    fontSize: 15,
     fontWeight: '600',
   },
   demoCard: {

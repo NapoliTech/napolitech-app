@@ -327,6 +327,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
@@ -335,7 +336,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.hairline,
   },
   backIcon: {
     fontSize: 20,
@@ -344,24 +346,26 @@ const styles = StyleSheet.create({
   brandContainer: {
     alignItems: 'center',
     marginBottom: spacing.lg,
+    backgroundColor: colors.background,
   },
   logoWrapper: {
     width: 64,
     height: 64,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
-    ...shadows.md,
   },
   logoIcon: {
     fontSize: 32,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text,
+    lineHeight: 33,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
@@ -370,9 +374,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.lg,
-    ...shadows.md,
+    borderWidth: 1,
+    borderColor: colors.hairline,
   },
   inputGroup: {
     marginBottom: spacing.md,
@@ -386,7 +391,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.softCloud,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -410,13 +415,11 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    height: 52,
     marginTop: spacing.sm,
-    ...shadows.sm,
   },
   buttonDisabled: {
     opacity: 0.7,

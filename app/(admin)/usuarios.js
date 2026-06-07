@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Modal, TextInput, Platform, Alert,
@@ -11,8 +11,6 @@ const TIPO_COLORS = {
   ATENDENTE: { bg: colors.infoLight, text: colors.info },
   CLIENTE: { bg: colors.successLight, text: colors.success },
 };
-
-const PAGE_SIZE = 10;
 
 function confirm(msg, onYes) {
   if (Platform.OS === 'web') {
@@ -29,7 +27,7 @@ function TipoBadge({ tipo }) {
   const c = TIPO_COLORS[tipo] || { bg: colors.border, text: colors.textSecondary };
   return (
     <View style={[styles.badge, { backgroundColor: c.bg }]}>
-      <Text style={[styles.badgeText, { color: c.text }]}>{tipo}</Text>
+      <Text style={[styles.badgeText, { color: c.text }]}>{tipo || '—'}</Text>
     </View>
   );
 }
@@ -77,11 +75,7 @@ function CreateUserModal({ visible, onClose, onCreated }) {
           </View>
 
           <View style={styles.modalBody}>
-            {error ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
+            {error ? <View style={styles.errorBanner}><Text style={styles.errorText}>{error}</Text></View> : null}
 
             <Text style={styles.fieldLabel}>Tipo de Conta *</Text>
             <View style={styles.tipoRow}>
@@ -97,34 +91,13 @@ function CreateUserModal({ visible, onClose, onCreated }) {
             </View>
 
             <Text style={styles.fieldLabel}>Nome *</Text>
-            <TextInput
-              style={styles.input}
-              value={nome}
-              onChangeText={setNome}
-              placeholder="Nome completo"
-              placeholderTextColor={colors.textMuted}
-            />
+            <TextInput style={styles.input} value={nome} onChangeText={setNome} placeholder="Nome completo" placeholderTextColor={colors.textMuted} />
 
             <Text style={styles.fieldLabel}>Email *</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="email@exemplo.com"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+            <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="email@exemplo.com" placeholderTextColor={colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
 
             <Text style={styles.fieldLabel}>Senha *</Text>
-            <TextInput
-              style={styles.input}
-              value={senha}
-              onChangeText={setSenha}
-              placeholder="Senha de acesso"
-              placeholderTextColor={colors.textMuted}
-              secureTextEntry
-            />
+            <TextInput style={styles.input} value={senha} onChangeText={setSenha} placeholder="Senha de acesso" placeholderTextColor={colors.textMuted} secureTextEntry />
           </View>
 
           <View style={styles.modalFooter}>
@@ -132,9 +105,7 @@ function CreateUserModal({ visible, onClose, onCreated }) {
               <Text style={styles.btnSecondaryText}>Cancelar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.btnPrimary} onPress={handleCreate} disabled={saving}>
-              {saving
-                ? <ActivityIndicator size="small" color={colors.textInverse} />
-                : <Text style={styles.btnPrimaryText}>Criar Usuário</Text>}
+              {saving ? <ActivityIndicator size="small" color={colors.textInverse} /> : <Text style={styles.btnPrimaryText}>Criar Usuário</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -149,31 +120,17 @@ function EditUserModal({ visible, usuario, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (usuario) {
-      setNome(usuario.nome || usuario.name || '');
-      setEmail(usuario.email || '');
-      setError('');
-    }
+  useState(() => {
+    if (usuario) { setNome(usuario.nome || usuario.name || ''); setEmail(usuario.email || ''); setError(''); }
   }, [usuario]);
 
   const handleSave = async () => {
-    if (!nome.trim() || !email.trim()) {
-      setError('Nome e email são obrigatórios.');
-      return;
-    }
+    if (!nome.trim() || !email.trim()) { setError('Nome e email são obrigatórios.'); return; }
     setSaving(true);
     setError('');
-    const res = await adminService.updateUsuario(usuario.id, {
-      nome: nome.trim(),
-      email: email.trim(),
-    });
+    const res = await adminService.updateUsuario(usuario.id, { nome: nome.trim(), email: email.trim() });
     setSaving(false);
-    if (res.success) {
-      onSaved();
-    } else {
-      setError(res.error || 'Erro ao salvar.');
-    }
+    if (res.success) { onSaved(); } else { setError(res.error || 'Erro ao salvar.'); }
   };
 
   return (
@@ -182,47 +139,19 @@ function EditUserModal({ visible, usuario, onClose, onSaved }) {
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Editar Usuário</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeBtnText}>✕</Text>
-            </TouchableOpacity>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}><Text style={styles.closeBtnText}>✕</Text></TouchableOpacity>
           </View>
-
           <View style={styles.modalBody}>
-            {error ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
-
+            {error ? <View style={styles.errorBanner}><Text style={styles.errorText}>{error}</Text></View> : null}
             <Text style={styles.fieldLabel}>Nome *</Text>
-            <TextInput
-              style={styles.input}
-              value={nome}
-              onChangeText={setNome}
-              placeholder="Nome completo"
-              placeholderTextColor={colors.textMuted}
-            />
-
+            <TextInput style={styles.input} value={nome} onChangeText={setNome} placeholder="Nome completo" placeholderTextColor={colors.textMuted} />
             <Text style={styles.fieldLabel}>Email *</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="email@exemplo.com"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+            <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="email@exemplo.com" placeholderTextColor={colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
           </View>
-
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.btnSecondary} onPress={onClose} disabled={saving}>
-              <Text style={styles.btnSecondaryText}>Cancelar</Text>
-            </TouchableOpacity>
+            <TouchableOpacity style={styles.btnSecondary} onPress={onClose} disabled={saving}><Text style={styles.btnSecondaryText}>Cancelar</Text></TouchableOpacity>
             <TouchableOpacity style={styles.btnPrimary} onPress={handleSave} disabled={saving}>
-              {saving
-                ? <ActivityIndicator size="small" color={colors.textInverse} />
-                : <Text style={styles.btnPrimaryText}>Salvar</Text>}
+              {saving ? <ActivityIndicator size="small" color={colors.textInverse} /> : <Text style={styles.btnPrimaryText}>Salvar</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -232,45 +161,37 @@ function EditUserModal({ visible, usuario, onClose, onSaved }) {
 }
 
 export default function UsuariosScreen() {
-  const [usuarios, setUsuarios] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  const [emailBusca, setEmailBusca] = useState('');
+  const [resultado, setResultado] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [editUser, setEditUser] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
-  const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
-  const loadUsuarios = useCallback(async (p = 0) => {
+  const handleBuscar = async () => {
+    if (!emailBusca.trim()) return;
     setLoading(true);
     setError('');
-    const res = await adminService.listUsuarios(p, PAGE_SIZE);
+    setResultado(null);
+    const res = await adminService.getUsuarioByEmail(emailBusca.trim());
     setLoading(false);
-    if (res.success) {
-      let items = [];
-      let pages = 1;
-      if (Array.isArray(res.data)) {
-        items = res.data;
-      } else if (res.data?.content) {
-        items = res.data.content;
-        pages = res.data.totalPages ?? 1;
-      }
-      setUsuarios(items);
-      setTotalPages(pages);
+    if (res.success && res.data) {
+      setResultado(res.data);
     } else {
-      setError(res.error || 'Erro ao carregar usuários.');
+      setError('Usuário não encontrado para esse e-mail.');
     }
-  }, []);
+  };
 
-  useEffect(() => { loadUsuarios(page); }, [page]);
-
-  const handleDelete = (u) => {
-    confirm(`Excluir "${u.nome || u.name}"? Esta ação não pode ser desfeita.`, async () => {
-      setDeletingId(u.id);
-      const res = await adminService.deleteUsuario(u.id);
-      setDeletingId(null);
+  const handleDelete = () => {
+    if (!resultado) return;
+    confirm(`Excluir "${resultado.nome || resultado.name}"? Esta ação não pode ser desfeita.`, async () => {
+      setDeleting(true);
+      const res = await adminService.deleteUsuario(resultado.id);
+      setDeleting(false);
       if (res.success) {
-        loadUsuarios(page);
+        setResultado(null);
+        setEmailBusca('');
       } else {
         if (Platform.OS === 'web') {
           window.alert(res.error || 'Erro ao excluir usuário.');
@@ -281,109 +202,119 @@ export default function UsuariosScreen() {
     });
   };
 
+  const u = resultado;
+  const tipo = u?.tipoUsuario || u?.tipo;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.inner}>
       <View style={styles.pageHeader}>
         <View>
           <Text style={styles.pageTitle}>Usuários</Text>
-          <Text style={styles.pageSubtitle}>Gerenciar contas</Text>
+          <Text style={styles.pageSubtitle}>Buscar e gerenciar contas</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowCreate(true)}>
           <Text style={styles.addBtnText}>+ Novo Usuário</Text>
         </TouchableOpacity>
       </View>
 
-      {error ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
-
+      {/* Busca por e-mail */}
       <View style={styles.card}>
-        {/* Header da tabela */}
-        <View style={[styles.tableRow, styles.tableHeader]}>
-          <Text style={[styles.col, styles.colId, styles.thText]}>ID</Text>
-          <Text style={[styles.col, styles.colNome, styles.thText]}>Nome</Text>
-          <Text style={[styles.col, styles.colEmail, styles.thText]}>Email</Text>
-          <Text style={[styles.col, styles.colTipo, styles.thText]}>Tipo</Text>
-          <Text style={[styles.col, styles.colAcoes, styles.thText]}>Ações</Text>
+        <Text style={styles.cardTitle}>🔍 Buscar por e-mail</Text>
+        <View style={styles.searchRow}>
+          <TextInput
+            style={styles.searchInput}
+            value={emailBusca}
+            onChangeText={setEmailBusca}
+            placeholder="Digite o e-mail do usuário"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            onSubmitEditing={handleBuscar}
+            returnKeyType="search"
+          />
+          <TouchableOpacity style={styles.searchBtn} onPress={handleBuscar} disabled={loading}>
+            {loading
+              ? <ActivityIndicator size="small" color={colors.textInverse} />
+              : <Text style={styles.searchBtnText}>Buscar</Text>}
+          </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
+        {error ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
-        ) : usuarios.length === 0 ? (
-          <View style={styles.center}>
-            <Text style={styles.emptyText}>Nenhum usuário encontrado.</Text>
-          </View>
-        ) : (
-          usuarios.map((u, idx) => (
-            <View key={u.id} style={[styles.tableRow, idx % 2 === 1 && styles.tableRowAlt]}>
-              <Text style={[styles.col, styles.colId, styles.tdText]}>#{u.id}</Text>
-              <Text style={[styles.col, styles.colNome, styles.tdText]} numberOfLines={1}>
-                {u.nome || u.name || '—'}
-              </Text>
-              <Text style={[styles.col, styles.colEmail, styles.tdText]} numberOfLines={1}>
-                {u.email || '—'}
-              </Text>
-              <View style={[styles.col, styles.colTipo]}>
-                <TipoBadge tipo={u.tipoUsuario || u.tipo || '—'} />
-              </View>
-              <View style={[styles.col, styles.colAcoes, styles.acoesFlex]}>
-                <TouchableOpacity
-                  style={styles.editBtn}
-                  onPress={() => setEditUser(u)}
-                >
-                  <Text style={styles.editBtnText}>✏️</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.delBtn}
-                  onPress={() => handleDelete(u)}
-                  disabled={deletingId === u.id}
-                >
-                  {deletingId === u.id
-                    ? <ActivityIndicator size="small" color={colors.error} />
-                    : <Text style={styles.delBtnText}>🗑️</Text>}
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
+        ) : null}
       </View>
 
-      {/* Paginação */}
-      {totalPages > 1 && (
-        <View style={styles.pagination}>
-          <TouchableOpacity
-            style={[styles.pageBtn, page === 0 && styles.pageBtnDisabled]}
-            onPress={() => setPage(p => Math.max(0, p - 1))}
-            disabled={page === 0}
-          >
-            <Text style={styles.pageBtnText}>‹ Anterior</Text>
-          </TouchableOpacity>
-          <Text style={styles.pageInfo}>Página {page + 1} de {totalPages}</Text>
-          <TouchableOpacity
-            style={[styles.pageBtn, page >= totalPages - 1 && styles.pageBtnDisabled]}
-            onPress={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-          >
-            <Text style={styles.pageBtnText}>Próxima ›</Text>
-          </TouchableOpacity>
+      {/* Resultado */}
+      {u && (
+        <View style={styles.resultCard}>
+          <View style={styles.resultHeader}>
+            <View style={styles.resultAvatar}>
+              <Text style={styles.resultAvatarText}>
+                {(u.nome || u.name || '?').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.resultInfo}>
+              <Text style={styles.resultNome}>{u.nome || u.name || '—'}</Text>
+              <Text style={styles.resultEmail}>{u.email || '—'}</Text>
+              <TipoBadge tipo={tipo} />
+            </View>
+          </View>
+
+          <View style={styles.resultMeta}>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>ID</Text>
+              <Text style={styles.metaValue}>#{u.id}</Text>
+            </View>
+            {u.telefone ? (
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Telefone</Text>
+                <Text style={styles.metaValue}>{u.telefone}</Text>
+              </View>
+            ) : null}
+            {u.cpf ? (
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>CPF</Text>
+                <Text style={styles.metaValue}>{u.cpf}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.resultActions}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => setEditUser(u)}
+            >
+              <Text style={styles.editBtnText}>✏️ Editar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.delBtn}
+              onPress={handleDelete}
+              disabled={deleting}
+            >
+              {deleting
+                ? <ActivityIndicator size="small" color={colors.error} />
+                : <Text style={styles.delBtnText}>🗑️ Excluir</Text>}
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
       <CreateUserModal
         visible={showCreate}
         onClose={() => setShowCreate(false)}
-        onCreated={() => { setShowCreate(false); loadUsuarios(0); setPage(0); }}
+        onCreated={() => setShowCreate(false)}
       />
 
       <EditUserModal
         visible={!!editUser}
         usuario={editUser}
         onClose={() => setEditUser(null)}
-        onSaved={() => { setEditUser(null); loadUsuarios(page); }}
+        onSaved={() => {
+          setEditUser(null);
+          if (emailBusca) handleBuscar();
+        }}
       />
     </ScrollView>
   );
@@ -392,8 +323,6 @@ export default function UsuariosScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   inner: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { alignItems: 'center', paddingVertical: spacing.xxl },
-  emptyText: { color: colors.textMuted, fontSize: 15 },
 
   pageHeader: {
     flexDirection: 'row',
@@ -407,184 +336,126 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    ...shadows.sm,
+    borderRadius: borderRadius.full,
   },
   addBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 14 },
 
-  errorBanner: {
-    backgroundColor: colors.errorLight,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-  },
-  errorText: { color: colors.error, fontSize: 14 },
-
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    ...shadows.md,
+    borderRadius: borderRadius.sm,
+    padding: spacing.lg,
     marginBottom: spacing.lg,
-  },
-
-  tableHeader: {
-    backgroundColor: colors.background,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.border,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tableRowAlt: { backgroundColor: colors.background },
-  thText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase' },
-  tdText: { fontSize: 14, color: colors.text },
-
-  col: { paddingHorizontal: 4 },
-  colId: { width: 50 },
-  colNome: { flex: 2 },
-  colEmail: { flex: 3 },
-  colTipo: { width: 100, alignItems: 'flex-start' },
-  colAcoes: { width: 80 },
-  acoesFlex: { flexDirection: 'row', gap: spacing.xs, alignItems: 'center' },
-
-  badge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-  },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-
-  editBtn: {
-    width: 30, height: 30,
-    justifyContent: 'center', alignItems: 'center',
-    backgroundColor: colors.infoLight,
-    borderRadius: borderRadius.sm,
-  },
-  editBtnText: { fontSize: 14 },
-  delBtn: {
-    width: 30, height: 30,
-    justifyContent: 'center', alignItems: 'center',
-    backgroundColor: colors.errorLight,
-    borderRadius: borderRadius.sm,
-  },
-  delBtnText: { fontSize: 14 },
-
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  pageBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  pageBtnDisabled: { opacity: 0.4 },
-  pageBtnText: { fontSize: 13, color: colors.text, fontWeight: '500' },
-  pageInfo: { fontSize: 13, color: colors.textSecondary },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
 
-  // Modal
-  overlay: {
+  searchRow: { flexDirection: 'row', gap: spacing.sm },
+  searchInput: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  modal: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    width: '100%',
-    maxWidth: 440,
-    ...shadows.lg,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  closeBtn: { padding: spacing.xs },
-  closeBtnText: { fontSize: 18, color: colors.textMuted },
-  modalBody: { padding: spacing.lg },
-  modalFooter: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.softCloud,
+    borderRadius: borderRadius.full,
+    borderWidth: 0,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 15,
     color: colors.text,
   },
-
-  tipoRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+  searchBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 80,
+    minHeight: 44,
   },
-  tipoOption: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+  searchBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 14 },
+
+  errorBanner: {
+    backgroundColor: colors.errorLight,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.md,
+  },
+  errorText: { color: colors.error, fontSize: 14 },
+
+  resultCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.sm,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
-    backgroundColor: colors.background,
   },
+  resultHeader: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg },
+  resultAvatar: {
+    width: 56, height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultAvatarText: { color: colors.textInverse, fontSize: 22, fontWeight: '700' },
+  resultInfo: { flex: 1, justifyContent: 'center', gap: spacing.xs },
+  resultNome: { fontSize: 18, fontWeight: '700', color: colors.text },
+  resultEmail: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
+
+  badge: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.full },
+  badgeText: { fontSize: 11, fontWeight: '700' },
+
+  resultMeta: {
+    flexDirection: 'row',
+    gap: spacing.lg,
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    marginBottom: spacing.lg,
+  },
+  metaItem: {},
+  metaLabel: { fontSize: 11, color: colors.textMuted, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2 },
+  metaValue: { fontSize: 14, fontWeight: '600', color: colors.text },
+
+  resultActions: { flexDirection: 'row', gap: spacing.md },
+  editBtn: {
+    flex: 1,
+    backgroundColor: colors.infoLight,
+    borderRadius: borderRadius.full,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  editBtnText: { color: colors.info, fontWeight: '700', fontSize: 14 },
+  delBtn: {
+    flex: 1,
+    backgroundColor: colors.errorLight,
+    borderRadius: borderRadius.full,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  delBtnText: { color: colors.error, fontWeight: '700', fontSize: 14 },
+
+  // Modal
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
+  modal: { backgroundColor: colors.surface, borderTopLeftRadius: borderRadius.lg, borderTopRightRadius: borderRadius.lg, borderBottomLeftRadius: borderRadius.sm, borderBottomRightRadius: borderRadius.sm, width: '100%', maxWidth: 440 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+  closeBtn: { padding: spacing.xs },
+  closeBtnText: { fontSize: 18, color: colors.textMuted },
+  modalBody: { padding: spacing.lg },
+  modalFooter: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
+
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: spacing.xs, marginTop: spacing.md },
+  input: { backgroundColor: colors.softCloud, borderRadius: borderRadius.full, borderWidth: 0, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: 15, color: colors.text },
+
+  tipoRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+  tipoOption: { flex: 1, paddingVertical: spacing.sm, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, alignItems: 'center', backgroundColor: colors.background },
   tipoOptionActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   tipoOptionText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   tipoOptionTextActive: { color: colors.textInverse },
 
-  btnPrimary: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
+  btnPrimary: { flex: 1, backgroundColor: colors.primary, borderRadius: borderRadius.full, paddingVertical: spacing.md, alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   btnPrimaryText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
-  btnSecondary: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 48,
-  },
+  btnSecondary: { flex: 1, backgroundColor: colors.surface, borderRadius: borderRadius.full, paddingVertical: spacing.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border, minHeight: 48 },
   btnSecondaryText: { color: colors.text, fontWeight: '600', fontSize: 15 },
 });

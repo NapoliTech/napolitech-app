@@ -8,6 +8,7 @@ function TabBarIcon({ name, focused }) {
   const icons = {
     order: focused ? '🍕' : '🍕',
     orders: focused ? '📋' : '📋',
+    avaliacoes: focused ? '⭐' : '⭐',
     profile: focused ? '👤' : '👤',
   };
 
@@ -61,6 +62,13 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="avaliacoes"
+        options={{
+          title: 'Avaliações',
+          tabBarIcon: ({ focused }) => <TabBarIcon name="avaliacoes" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: t('tabs.profile'),
@@ -69,6 +77,12 @@ export default function AppLayout() {
       />
 
       {/* Telas que nao aparecem no tab bar */}
+      <Tabs.Screen
+        name="avaliacao"
+        options={{
+          href: null, // formulário — acessado via botão na tela de avaliações
+        }}
+      />
       <Tabs.Screen
         name="checkout"
         options={{

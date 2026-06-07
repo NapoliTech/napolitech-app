@@ -398,7 +398,7 @@ export const orderService = {
         itens.push({
           produto: produtoIds,
           quantidade: 1,
-          tamanhoPizza: orderData.pizza.size?.id || 'GRANDE',
+          tamanhoPizza: orderData.pizza.flavor2 ? 'MEIO_A_MEIO' : (orderData.pizza.size?.id || 'GRANDE'),
           bordaRecheada: orderData.bordaRecheada || 'NORMAL',
         });
       }
@@ -857,9 +857,9 @@ export const adminService = {
   },
 
   // Usuarios
-  async listUsuarios(page = 0, size = 10) {
+  async getUsuarioByEmail(email) {
     try {
-      const response = await request(`/usuarios?page=${page}&size=${size}&sort=nome,asc`);
+      const response = await request(`/email/${encodeURIComponent(email)}`);
       return { success: true, data: response };
     } catch (error) {
       return { success: false, error: error.message };
@@ -952,6 +952,79 @@ export const adminService = {
   },
 };
 
+// ========== AVALIAÇÕES ==========
+
+export const avaliacaoService = {
+  async criar(pedidoId, nota, comentario, latitude, longitude) {
+    try {
+      const data = await request('/avaliacoes', {
+        method: 'POST',
+        body: JSON.stringify({ pedidoId, nota, comentario, latitude, longitude }),
+      });
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async pedidosAvaliados() {
+    try {
+      const data = await request('/avaliacoes/pedidos-avaliados');
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  async listarMinhas(page = 0, size = 10) {
+    try {
+      const data = await request(`/avaliacoes/minhas?page=${page}&size=${size}`);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async listarTodas(page = 0, size = 10) {
+    try {
+      const data = await request(`/avaliacoes?page=${page}&size=${size}`);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async buscarPorId(id) {
+    try {
+      const data = await request(`/avaliacoes/${id}`);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async adicionarFoto(avaliacaoId, dadosImagem, nomeArquivo) {
+    try {
+      const data = await request(`/avaliacoes/${avaliacaoId}/fotos`, {
+        method: 'POST',
+        body: JSON.stringify({ dadosImagem, nomeArquivo }),
+      });
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async dashboard() {
+    try {
+      const data = await request('/avaliacoes/dashboard');
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+};
+
 // Exporta tudo junto tambem para facilitar
 export default {
   auth: authService,
@@ -961,4 +1034,5 @@ export default {
   user: userService,
   upsell: upsellService,
   admin: adminService,
+  avaliacoes: avaliacaoService,
 };

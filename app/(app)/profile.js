@@ -360,8 +360,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'web' ? 16 : 60,
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: borderRadius.xl,
-    borderBottomRightRadius: borderRadius.xl,
   },
   avatarContainer: {
     alignItems: 'center',
@@ -369,8 +367,8 @@ const styles = StyleSheet.create({
   avatar: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
@@ -404,9 +402,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 11,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   editButton: {
     fontSize: 14,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.none,
     padding: spacing.lg,
   },
   field: {
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: colors.primary,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     marginTop: spacing.md,
   },
@@ -480,6 +480,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   menuIcon: {
     fontSize: 20,
@@ -505,7 +507,7 @@ const styles = StyleSheet.create({
   logoutButton: {
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
@@ -519,10 +521,12 @@ const styles = StyleSheet.create({
   deleteButton: {
     paddingVertical: spacing.md,
     alignItems: 'center',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.error,
   },
   deleteButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.error,
+    color: colors.textInverse,
   },
 });

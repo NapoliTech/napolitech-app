@@ -598,6 +598,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.xs,
+    letterSpacing: -0.3,
   },
   sectionSubtitle: {
     fontSize: 12,
@@ -606,8 +607,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   itemRow: {
     flexDirection: 'row',
@@ -674,7 +677,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight || '#E8F5E9',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.sm,
   },
   selectedBadgeText: {
     fontSize: 14,
@@ -705,7 +708,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.softCloud,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -726,9 +729,11 @@ const styles = StyleSheet.create({
   cancelButton: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.border,
+    height: 52,
+    justifyContent: 'center',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -737,9 +742,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
+    height: 52,
     paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   saveButtonText: {
     fontSize: 16,
@@ -762,7 +769,7 @@ const styles = StyleSheet.create({
   },
   upsellVazio: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
@@ -777,12 +784,13 @@ const styles = StyleSheet.create({
     width: 160,
     padding: spacing.md,
     marginRight: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1.5,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   upsellItemCardAtivo: {
+    borderWidth: 2,
     borderColor: colors.primary,
     backgroundColor: colors.primaryLight || '#FFF5F5',
   },
@@ -845,10 +853,11 @@ const styles = StyleSheet.create({
   finishButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.success,
-    paddingVertical: spacing.md,
+    height: 52,
     paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
   },
   finishButtonText: {
     fontSize: 16,

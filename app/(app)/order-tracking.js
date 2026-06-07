@@ -45,6 +45,12 @@ const ORDER_STATUS = {
     icon: '🎉',
     step: 4,
   },
+  ENCERRADO: {
+    label: 'Encerrado',
+    description: 'Pedido finalizado e encerrado.',
+    icon: '✔️',
+    step: 5,
+  },
   CANCELADO: {
     label: 'Cancelado',
     description: 'Pedido foi cancelado',
@@ -346,9 +352,11 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
+    height: 52,
     paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   retryButtonText: {
     fontSize: 16,
@@ -377,7 +385,7 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.textInverse,
   },
@@ -418,6 +426,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.xs,
+    letterSpacing: -0.3,
   },
   statusDescription: {
     fontSize: 14,
@@ -503,11 +512,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.md,
+    letterSpacing: -0.3,
   },
   detailCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   detailRow: {
     flexDirection: 'row',
@@ -547,8 +559,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   addressIcon: {
     fontSize: 24,
@@ -576,9 +590,10 @@ const styles = StyleSheet.create({
   },
   historyButton: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    height: 52,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   historyButtonText: {
     fontSize: 16,

@@ -495,8 +495,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'web' ? 16 : 60,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: borderRadius.xl,
-    borderBottomRightRadius: borderRadius.xl,
   },
   headerContent: {
     flexDirection: 'row',
@@ -513,7 +511,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.textInverse,
   },
@@ -556,6 +554,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
+    letterSpacing: -0.3,
   },
   sizeContainer: {
     flexDirection: 'row',
@@ -565,13 +564,14 @@ const styles = StyleSheet.create({
   sizeCard: {
     width: 100,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.md,
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
   },
   sizeCardSelected: {
+    borderWidth: 2,
     borderColor: colors.primary,
   },
   sizeEmoji: {
@@ -612,13 +612,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
   },
   flavorCardSelected: {
+    borderWidth: 2,
     borderColor: colors.primary,
   },
   flavorCardContent: {
@@ -683,9 +684,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.md,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.primary,
     borderStyle: 'dashed',
     marginBottom: spacing.sm,
@@ -706,9 +707,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.md,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   drinkInfo: {
     flex: 1,
@@ -762,8 +765,10 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.sm,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -840,9 +845,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
+    height: 52,
     paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
   },
   orderButtonDisabled: {
     backgroundColor: colors.textMuted,
@@ -867,8 +872,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    borderTopLeftRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.lg,
     maxHeight: '75%',
   },
   modalHandle: {
@@ -911,10 +916,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
+    backgroundColor: colors.softCloud,
+    borderRadius: borderRadius.sm,
     padding: spacing.md,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modalItemInfo: {
     flex: 1,
