@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+const USE_MOCK = false;
 
 const extrairNomeProduto = (item) => {
   // Se produto for um array de objetos (meio-a-meio)

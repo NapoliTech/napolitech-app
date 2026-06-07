@@ -16,6 +16,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { orderService, addressService, productService } from '../../services/api';
 import { colors, spacing, borderRadius } from '../../constants/theme';
 
+const alerta = (titulo, mensagem) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${titulo}\n\n${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+};
+
 export default function CheckoutScreen() {
   const { user } = useAuth();
   const params = useLocalSearchParams();
@@ -169,7 +177,7 @@ export default function CheckoutScreen() {
     const { rua, numero, bairro, cidade, estado, cep } = addressForm;
 
     if (!rua || !numero || !bairro || !cidade || !estado || !cep) {
-      Alert.alert('Campos obrigatorios', 'Preencha todos os campos do endereco.');
+      alerta('Campos obrigatorios', 'Preencha todos os campos do endereco.');
       return;
     }
 
@@ -186,12 +194,12 @@ export default function CheckoutScreen() {
           setUserAddress(result.address);
         }
         setShowAddressForm(false);
-        Alert.alert('Sucesso', 'Endereco cadastrado com sucesso!');
+        alerta('Sucesso', 'Endereco cadastrado com sucesso!');
       } else {
-        Alert.alert('Erro', result.error || 'Nao foi possivel salvar o endereco.');
+        alerta('Erro', result.error || 'Nao foi possivel salvar o endereco.');
       }
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao salvar endereco.');
+      alerta('Erro', 'Falha ao salvar endereco.');
     } finally {
       setSavingAddress(false);
     }
@@ -217,7 +225,7 @@ export default function CheckoutScreen() {
 
   const handleFinishOrder = async () => {
     if (!userAddress) {
-      Alert.alert('Endereco necessario', 'Cadastre um endereco para continuar.');
+      alerta('Endereco necessario', 'Cadastre um endereco para continuar.');
       return;
     }
 
@@ -252,7 +260,7 @@ export default function CheckoutScreen() {
         },
       });
     } else {
-      Alert.alert('Erro no pedido', result.error || 'Nao foi possivel criar o pedido. Tente novamente.');
+      alerta('Erro no pedido', result.error || 'Nao foi possivel criar o pedido. Tente novamente.');
     }
   };
 
