@@ -57,7 +57,7 @@ export default function OrderScreen() {
         productService.getDrinks(),
       ]);
 
-      if (flavorsRes.success) setFlavors(flavorsRes.data);
+      if (flavorsRes.success) setFlavors(flavorsRes.data.filter(f => f.name !== 'Pizza teste'));
       if (sizesRes.success) {
         setSizes(sizesRes.data);
         setSelectedSize(sizesRes.data[1]);

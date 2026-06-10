@@ -204,6 +204,7 @@ export default function CardapioScreen() {
         items = res.data.content;
         pages = res.data.totalPages ?? 1;
       }
+      items = items.filter(i => i.nome !== 'Pizza teste');
       if (cat) items = items.filter(i => i.categoriaProduto === cat);
       setProdutos(items);
       setTotalPages(pages);
